@@ -27,6 +27,13 @@ jobs:
         run: |
           pytest tests/ -v
 
-      - name: Run Benchmark Smoke Test (Walk-Forward Bootstrap)
+      - name: Run Mathematical Audit Suite (Hand-Verification, Integer Scaling, Statistics)
+        run: |
+          python scripts/audit_math_hand_verification.py
+          python scripts/audit_integer_scaling_bound.py
+          python scripts/audit_statistical_verification.py
+          python scripts/audit_benchmark_validity.py
+
+      - name: Run Benchmark Harness (Walk-Forward Bootstrap & Manifest Generation)
         run: |
           python scripts/run_bench.py

@@ -59,4 +59,6 @@ dist/
 # Data caches
 *.parquet
 *.sqlite
+*.db
 data/cache/
+data/*.db

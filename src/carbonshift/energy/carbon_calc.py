@@ -44,7 +44,19 @@ def calculate_job_compute_footprint(
     carbons: List[float] = []
     costs: List[float] = []
 
-    for slot in slots:
+    if not slots:
+        return 0.0, 0.0, 0.0
+
+    slot_len = slots[0].end_epoch_s - slots[0].start_epoch_s
+    if slot_len > 0.0:
+        base_s = slots[0].start_epoch_s
+        s_start_idx = max(0, int((start_epoch_s - base_s) // slot_len))
+        s_end_idx = min(len(slots), int((end_epoch_s - base_s) / slot_len) + 2)
+        active_slots = slots[s_start_idx:s_end_idx]
+    else:
+        active_slots = slots
+
+    for slot in active_slots:
         overlap = compute_slot_overlap_fraction(
             t_start=start_epoch_s,
             t_end=end_epoch_s,
@@ -58,7 +70,8 @@ def calculate_job_compute_footprint(
         if c_pt is None:
             continue
 
-        intensity = getattr(c_pt, intensity_key, c_pt.intensity_p50)
+        val = getattr(c_pt, intensity_key, None)
+        intensity = val if val is not None else c_pt.intensity_p50
         price = c_pt.price_per_kwh
 
         slot_e = compute_slot_energy_kwh(

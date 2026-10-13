@@ -9,7 +9,9 @@ Normalizes data into a canonical regions x time-slots matrix.
 import os
 import json
 from pathlib import Path
-from typing import Dict, List, Optional
+import time
+import random
+from typing import Callable, Any, Dict, List, Optional
 import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
@@ -17,6 +19,29 @@ import pyarrow.parquet as pq
 from carbonshift.core.types import CarbonPoint
 from carbonshift.data.synthetic import generate_synthetic_carbon_series
 from carbonshift.data.validator import TelemetryValidator
+
+
+def retry_with_backoff(
+    action: Callable[[], Any],
+    max_retries: int = 3,
+    initial_delay: float = 0.5,
+    backoff_factor: float = 2.0,
+    jitter: bool = True,
+) -> Any:
+    """Execute action with exponential backoff and randomized jitter for grid API calls."""
+    delay = initial_delay
+    last_err: Optional[Exception] = None
+    for attempt in range(max_retries):
+        try:
+            return action()
+        except Exception as e:
+            last_err = e
+            if attempt == max_retries - 1:
+                break
+            sleep_time = delay * (1.0 + random.uniform(0.0, 0.5) if jitter else 1.0)
+            time.sleep(sleep_time)
+            delay *= backoff_factor
+    raise RuntimeError(f"Operation failed after {max_retries} attempts: {last_err}") from last_err
 
 
 CACHE_DIR = Path("data/cache")

@@ -69,3 +69,28 @@ def test_optimizer_solves_and_verifies_parity():
         power_model=power_model,
     )
     assert is_valid is True
+
+
+def test_rolling_horizon_coordinator_step():
+    """Verify rolling horizon coordinator commits decisions and respects freeze window."""
+    from carbonshift.optimizer.rolling_horizon import RollingHorizonCoordinator
+    regions = [Region(id="uk-north", name="UK North", pue=1.15, capacity_cores=128, capacity_mem_gb=512)]
+    slots = [Slot(index=i, start_epoch_s=float(i * 3600), end_epoch_s=float((i + 1) * 3600), duration_hours=1.0) for i in range(48)]
+    telemetry = {
+        "uk-north": {
+            p.slot_index: p for p in generate_synthetic_carbon_series(region_id="uk-north", num_slots=48, seed=42)
+        }
+    }
+    jobs = sample_cluster_trace_jobs(num_jobs=6, horizon_seconds=86400.0, seed=42, available_regions=["uk-north"])
+    scheduler = CPSatScheduler()
+    coordinator = RollingHorizonCoordinator(scheduler=scheduler, horizon_slots=24, freeze_slots=2)
+
+    committed, sched = coordinator.plan_step(
+        current_slot_idx=0,
+        all_jobs=jobs,
+        regions=regions,
+        all_slots=slots,
+        carbon_telemetry=telemetry,
+    )
+    assert len(sched.decisions) == len(jobs)
+    assert len(coordinator.committed_decisions) == len(committed)

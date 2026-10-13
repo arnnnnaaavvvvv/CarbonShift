@@ -232,7 +232,7 @@ class CPSatScheduler:
                         job_id=job.id,
                         selected_region=r_id,
                         scheduled_start_epoch_s=actual_start_epoch,
-                        assigned_slot=s_idx,
+                        assigned_slot=slots[s_idx].index,
                         estimated_carbon_gco2e=round(carbon_val, 2),
                         estimated_cost_usd=round(cost_val, 4),
                         explanation=Explanation(

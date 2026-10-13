@@ -12,7 +12,7 @@ import csv
 import json
 from uuid import UUID, uuid4
 from typing import Dict, List, Optional
-from fastapi import FastAPI, Depends, HTTPException, Query, Response
+from fastapi import FastAPI, Depends, HTTPException, Query, Response, Header
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -73,9 +73,42 @@ class ReplayRequest(BaseModel):
     seed: int = 42
 
 
+def verify_api_key(x_api_key: Optional[str] = Header(None)):
+    """API key verification if CARBONSHIFT_API_KEY environment variable is configured."""
+    expected_key = os.getenv("CARBONSHIFT_API_KEY")
+    if expected_key and x_api_key != expected_key:
+        raise HTTPException(status_code=401, detail="Invalid or missing X-API-Key header")
+    return True
+
+
 @app.get("/health")
 def health_check():
     return {"status": "ok", "version": "1.0.0"}
+
+
+@app.get("/healthz")
+def healthz():
+    """Kubernetes liveness and readiness probe endpoint."""
+    return {"status": "healthy", "service": "carbonshift-engine", "version": "1.0.0"}
+
+
+@app.get("/metrics")
+def metrics(db: Session = Depends(get_db)):
+    """Prometheus exposition format metrics endpoint."""
+    schedules_count = db.query(ScheduleModel).count()
+    jobs_count = db.query(JobModel).count()
+    lines = [
+        "# HELP carbonshift_schedules_total Total number of schedules generated",
+        "# TYPE carbonshift_schedules_total counter",
+        f"carbonshift_schedules_total {schedules_count}",
+        "# HELP carbonshift_jobs_total Total number of jobs registered",
+        "# TYPE carbonshift_jobs_total counter",
+        f"carbonshift_jobs_total {jobs_count}",
+        "# HELP carbonshift_engine_up Engine operational status",
+        "# TYPE carbonshift_engine_up gauge",
+        "carbonshift_engine_up 1",
+    ]
+    return Response(content="\n".join(lines) + "\n", media_type="text/plain; version=0.0.4")
 
 
 @app.get("/api/v1/strategies")

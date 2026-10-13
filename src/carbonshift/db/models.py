@@ -4,7 +4,7 @@
 """
 
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import uuid4
 from sqlalchemy import (
     Column,
@@ -34,7 +34,7 @@ class JobModel(Base):
     source_region = Column(String(32), nullable=False)
     region_whitelist_csv = Column(String(256), nullable=False)
     utilization = Column(Float, default=0.8)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 
 class ScheduleModel(Base):
@@ -49,7 +49,7 @@ class ScheduleModel(Base):
     solver_status = Column(String(32), default="OPTIMAL")
     solve_time_ms = Column(Float, default=0.0)
     optimality_gap = Column(Float, default=0.0)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     decisions = relationship("DecisionModel", back_populates="schedule", cascade="all, delete-orphan")
 

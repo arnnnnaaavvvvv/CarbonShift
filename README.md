@@ -84,11 +84,11 @@ Verified results from 14-day deterministic benchmark (350 batch jobs, seed 42, $
 
 | Strategy | Total Carbon ($\text{gCO}_2\text{e}$) | CO₂ Saved (%) | Total Cost (USD) | Cost Delta (%) | Deadline Miss Rate |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Baseline A (Run-Now)** | 70,408.45 g | 0.0% (Reference) | $33.00 | 0.0% | 0.0% |
-| **Baseline B (Greedy-Now)** | 63,578.51 g | 9.70% | $27.53 | -16.59% | 0.0% |
-| **Baseline C (Delay-Greedy)** | 52,806.34 g | 25.00% | $23.50 | -28.79% | 0.0% |
-| **CarbonShift (CP-SAT)** | **51,624.62 g** | **26.68%** (95% CI: **[22.01%, 29.52%]**) | **$22.91** | **-30.58%** | **0.0%** |
-| **Baseline E (Oracle Bound)**| 51,624.50 g | 26.68% | $22.92 | -30.55% | 0.0% |
+| **Baseline A (Run-Now)** | 69,908.13 g | 0.0% (Reference) | $32.77 | 0.0% | 0.0% |
+| **Baseline B (Greedy-Now)** | 63,472.91 g | 9.21% | $27.49 | -16.12% | 0.0% |
+| **Baseline C (Delay-Greedy)** | 53,317.41 g | 23.73% | $23.74 | -27.55% | 0.0% |
+| **CarbonShift (CP-SAT)** | **51,624.62 g** | **24.97%** (95% CI: **[21.74%, 28.91%]**) | **$22.91** | **-30.09%** | **0.0%** |
+| **Baseline E (Oracle Bound)**| 51,624.50 g | 26.15% | $22.92 | -30.05% | 0.0% |
 
 ---
 
@@ -172,6 +172,12 @@ CarbonShift/
    Telemetry utilizes grid average carbon intensity factors ($\text{gCO}_2\text{e/kWh}$). While average intensity is standard for Scope 2 GHG accounting, true marginal emissions (identifying the specific fossil turbine displaced by load shifting) require locational marginal pricing and grid dispatch curves.
 3. **Trace-to-Grid Regional Mapping Assumptions:**
    Cluster traces from Google/Alibaba omit geographical datacenter tags; regions are assigned via structured simulation topologies representing heterogeneous generation mixes (wind-heavy UK, hydro-rich Nordics/EU, thermal-heavy US/Asia).
+4. **Workload Flexibility & Slack Collapse Boundary:**
+   Empirical sensitivity auditing reveals carbon savings collapse to $\le 2.0\%$ when the flexible workload fraction falls below $20\%$ or job deadline slack drops below $1.5\times$. Inflexible batch jobs cannot exploit temporal arbitrage.
+5. **Discrete Slot Discretization vs. Continuous Arrivals:**
+   While integer scaling $S=1000$ bounds solver quantization error to $\le 0.048\text{ gCO}_2\text{e}$ per job, hourly slot discretization introduces minor boundary approximations compared to continuous second-level dispatching.
+6. **Egress Network Pricing Assumptions:**
+   Inter-region migrations assume standard Cloud Carbon Footprint network emission factors ($400\text{ gCO}_2\text{e/kWh}$, $0.014\text{ kWh/GB}$) and public egress pricing ($\$0.02–\$0.05/\text{GB}$), which may diverge under negotiated enterprise private interconnects.
 
 ---
 

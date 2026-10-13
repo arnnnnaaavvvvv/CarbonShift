@@ -153,22 +153,24 @@ def precise_fsum(values: Sequence[float]) -> float:
 
 
 def differential_recompute(
-    job_tuples: List[Tuple[float, float, float, float, float]],
+    job_tuples: List[Tuple[float, float, float, float, float, float]],
     transfer_tuples: List[Tuple[float, bool, float]],
 ) -> Tuple[float, float]:
     """Secondary, intentionally simple float recomputation for differential checking.
 
-    job_tuple: (power_kw, slot_duration_hours, pue, overlap, intensity)
+    job_tuple: (power_kw, slot_duration_hours, pue, overlap, intensity, price_per_kwh)
     transfer_tuple: (data_gb, is_cross_region, egress_price)
     """
     total_c = 0.0
     total_cost = 0.0
-    for p, d, pue, w, i in job_tuples:
+    for p, d, pue, w, i, price in job_tuples:
         e = p * d * pue * w
         total_c += e * i
+        total_cost += e * price
     for gb, cross, egress in transfer_tuples:
         if cross and gb > 0.0:
             e_x = gb * NETWORK_KWH_PER_GB
             total_c += e_x * DEFAULT_NET_INTENSITY
             total_cost += gb * egress
     return total_c, total_cost
+
