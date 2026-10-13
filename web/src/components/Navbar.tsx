@@ -1,5 +1,5 @@
 import React from 'react';
-import { Award, Play, Download, Sparkles, Server, BarChart3, ShieldCheck, Cpu } from 'lucide-react';
+import { Award, Play, Download, Sparkles, Server, BarChart3, ShieldCheck, Cpu, Building2 } from 'lucide-react';
 import { CarbonShiftLogo } from './CarbonShiftLogo';
 
 interface NavbarProps {
@@ -60,6 +60,18 @@ export const Navbar: React.FC<NavbarProps> = ({
         >
           <Cpu className="w-3.5 h-3.5" />
           <span>Live Scheduler</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('saas')}
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl transition-all duration-300 ${
+            activeTab === 'saas'
+              ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/30 border border-emerald-400/40'
+              : 'text-slate-400 hover:text-white hover:bg-white/5'
+          }`}
+        >
+          <Building2 className="w-3.5 h-3.5" />
+          <span>SaaS Control Plane</span>
         </button>
 
         <button
