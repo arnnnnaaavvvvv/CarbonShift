@@ -22,7 +22,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         <CarbonShiftLogo size={42} glow={true} />
         <div>
           <div className="flex items-center gap-2">
-            <span className="font-display font-extrabold text-xl tracking-tight text-white">
+            <span className="font-brand font-extrabold text-2xl tracking-tight text-white">
               Carbon<span className="text-emerald-400">Shift</span>
             </span>
             <span className="badge-status">
@@ -37,13 +37,13 @@ export const Navbar: React.FC<NavbarProps> = ({
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex items-center bg-slate-900/80 p-1 rounded-xl border border-white/5 text-xs font-semibold">
+      <div className="flex items-center bg-slate-900/90 p-1.5 rounded-2xl border border-white/10 text-xs font-semibold backdrop-blur-md">
         <button
           onClick={() => setActiveTab('overview')}
-          className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all ${
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl transition-all duration-300 ${
             activeTab === 'overview'
-              ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20'
-              : 'text-slate-400 hover:text-white'
+              ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/30 border border-emerald-400/40'
+              : 'text-slate-400 hover:text-white hover:bg-white/5'
           }`}
         >
           <Sparkles className="w-3.5 h-3.5" />
@@ -52,10 +52,10 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         <button
           onClick={() => setActiveTab('scheduler')}
-          className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all ${
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl transition-all duration-300 ${
             activeTab === 'scheduler'
-              ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20'
-              : 'text-slate-400 hover:text-white'
+              ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/30 border border-emerald-400/40'
+              : 'text-slate-400 hover:text-white hover:bg-white/5'
           }`}
         >
           <Cpu className="w-3.5 h-3.5" />
@@ -64,10 +64,10 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         <button
           onClick={() => setActiveTab('telemetry')}
-          className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all ${
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl transition-all duration-300 ${
             activeTab === 'telemetry'
-              ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20'
-              : 'text-slate-400 hover:text-white'
+              ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/30 border border-emerald-400/40'
+              : 'text-slate-400 hover:text-white hover:bg-white/5'
           }`}
         >
           <BarChart3 className="w-3.5 h-3.5" />
@@ -76,10 +76,10 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         <button
           onClick={() => setActiveTab('kubernetes')}
-          className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all ${
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl transition-all duration-300 ${
             activeTab === 'kubernetes'
-              ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20'
-              : 'text-slate-400 hover:text-white'
+              ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/30 border border-emerald-400/40'
+              : 'text-slate-400 hover:text-white hover:bg-white/5'
           }`}
         >
           <Server className="w-3.5 h-3.5" />
@@ -88,10 +88,10 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         <button
           onClick={() => setActiveTab('audit')}
-          className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all ${
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl transition-all duration-300 ${
             activeTab === 'audit'
-              ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20'
-              : 'text-slate-400 hover:text-white'
+              ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/30 border border-emerald-400/40'
+              : 'text-slate-400 hover:text-white hover:bg-white/5'
           }`}
         >
           <ShieldCheck className="w-3.5 h-3.5" />

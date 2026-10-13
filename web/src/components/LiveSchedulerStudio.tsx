@@ -197,8 +197,57 @@ export const LiveSchedulerStudio: React.FC<LiveSchedulerStudioProps> = () => {
           </button>
         </div>
 
+        {/* Quick Scenario Preset Buttons */}
+        <div className="flex flex-wrap items-center gap-2 mb-4 pb-4 border-b border-white/5">
+          <span className="text-xs text-slate-400 font-medium mr-1">Quick Scenarios:</span>
+          <button
+            onClick={() => {
+              setNumJobs(50);
+              setSlackFactor(3.5);
+              setFlexFraction(0.95);
+              setAlphaCarbon(0.95);
+            }}
+            className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 transition-all"
+          >
+            🌱 Maximum Decarbonization
+          </button>
+          <button
+            onClick={() => {
+              setNumJobs(25);
+              setSlackFactor(2.0);
+              setFlexFraction(0.8);
+              setAlphaCarbon(0.70);
+            }}
+            className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 transition-all"
+          >
+            ⚖️ Pareto Balanced (Production)
+          </button>
+          <button
+            onClick={() => {
+              setNumJobs(30);
+              setSlackFactor(2.5);
+              setFlexFraction(0.85);
+              setAlphaCarbon(0.25);
+            }}
+            className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 transition-all"
+          >
+            💰 Spot Cost Arbitrage
+          </button>
+          <button
+            onClick={() => {
+              setNumJobs(80);
+              setSlackFactor(1.4);
+              setFlexFraction(0.5);
+              setAlphaCarbon(0.85);
+            }}
+            className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/30 transition-all"
+          >
+            ⚡ High-Throughput Burst
+          </button>
+        </div>
+
         {/* Control Sliders Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 pt-4 border-t border-white/5">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           {/* Slider 1: Workload Size */}
           <div className="flex flex-col gap-2">
             <div className="flex justify-between text-xs">
