@@ -27,6 +27,21 @@ Unlike heuristic schedulers, CarbonShift’s core value is a **reproducible, mat
 
 ---
 
+## 📚 Comprehensive Documentation Suite
+
+| Document | Description |
+| :--- | :--- |
+| **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** | **System Architecture & Technical Deep Dive** • High-level Mermaid diagrams, component breakdowns (L1/L2/L3), rolling-horizon state machine, failure modes, and graceful degradation. |
+| **[docs/MATH.md](docs/MATH.md)** | **Mathematical Foundations & Formal Invariants** • First-principles derivations, SPECpower cubic power models ($r=1.4$), piecewise multi-slot integration, integer scaling proofs, and risk penalties. |
+| **[docs/AUDIT.md](docs/AUDIT.md)** | **Mathematical & Benchmark Validity Audit** • Hand-verified 10-job arithmetic, $S=1000$ vs $10000$ bound parity, 10,000 fuzzed runs, SciPy bootstrap validation, and sensitivity collapse boundaries. |
+| **[docs/API_REFERENCE.md](docs/API_REFERENCE.md)** | **REST API Reference & OpenAPI Specification** • Complete endpoint catalog (`/plan`, `/replay`, `/reports/esg`, `/metrics`), request/response JSON schemas, and client examples. |
+| **[docs/DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md)** | **Production Deployment & Operations Guide** • Local setup, Docker Compose multi-container stack, in-cluster Kubernetes Pod Gate controller deployment, and Prometheus monitoring. |
+| **[docs/BENCHMARKING.md](docs/BENCHMARKING.md)** | **Benchmark Methodology & Trace Replay Protocol** • Analysis of common benchmark fallacies, 5-strategy comparisons, walk-forward validation, and 14-day deterministic reproduction instructions. |
+| **[docs/HACKATHON_PITCH.md](docs/HACKATHON_PITCH.md)** | **Hackathon Pitch Deck & Judge's Defense Guide** • 30-second elevator pitch, 3-minute stage presentation script, competitive matrix, and technical defense for the toughest judge questions. |
+| **[docs/CONTRIBUTING.md](docs/CONTRIBUTING.md)** | **Developer & Contributor Guidelines** • Coding standards, Conventional Commits, testing requirements (Hypothesis properties, $\ge 90\%$ coverage), and PR checklists. |
+
+---
+
 ## 🔬 Mathematical Foundations
 
 All computations adhere to the canonical specifications in [docs/MATH.md](docs/MATH.md):
