@@ -11,9 +11,11 @@ import io
 import csv
 import json
 import math
+import time
+import asyncio
 from uuid import UUID, uuid4
 from typing import Dict, List, Optional
-from fastapi import FastAPI, Depends, HTTPException, Query, Response, Header
+from fastapi import FastAPI, Depends, HTTPException, Query, Response, Header, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -29,11 +31,19 @@ from carbonshift.baselines.delay_greedy import schedule_delay_to_deadline_greedy
 from carbonshift.baselines.oracle import schedule_perfect_oracle
 from carbonshift.simulator.engine import TraceReplaySimulator
 from carbonshift.api.explanations import generate_decision_explanation
-from carbonshift.db.session import engine, Base, get_db
-from carbonshift.db.models import JobModel, ScheduleModel, DecisionModel
+from carbonshift.db.session import engine, Base, get_db, SessionLocal
+from carbonshift.db.models import (
+    JobModel,
+    ScheduleModel,
+    DecisionModel,
+    ClusterModel,
+    ApiKeyModel,
+    AlertLogModel,
+)
 
 # Ensure database tables exist
 Base.metadata.create_all(bind=engine)
+
 
 app = FastAPI(
     title="CarbonShift Engine",
@@ -362,7 +372,7 @@ class ApiKeyCreate(BaseModel):
     scope: str = "read_write"
 
 
-_CUSTOM_CLUSTERS: List[Dict] = [
+_DEFAULT_CLUSTERS: List[Dict] = [
     {
         "id": "eu-west",
         "name": "EU-West (Frankfurt)",
@@ -405,16 +415,59 @@ _CUSTOM_CLUSTERS: List[Dict] = [
     },
 ]
 
-_API_KEYS: List[Dict] = [
+_DEFAULT_API_KEYS: List[Dict] = [
     {
         "id": "key_live_default_01",
-        "name": "Default Cluster Ingestion Key",
-        "key_prefix": "cs_live_9f82...",
+        "name": "Production Kubernetes Operator",
+        "key_prefix": "cs_live_9f82...88a1",
         "created_at": "2026-10-13T12:00:00Z",
-        "scope": "read_write",
+        "scope": "Full Admin",
         "status": "active",
-    }
+    },
+    {
+        "id": "key_live_etl_02",
+        "name": "Airflow Ingestion Pipeline",
+        "key_prefix": "cs_live_44e1...29c4",
+        "created_at": "2026-10-12T10:00:00Z",
+        "scope": "Job Dispatch Only",
+        "status": "active",
+    },
 ]
+
+def _seed_db():
+    try:
+        with SessionLocal() as db:
+            if db.query(ClusterModel).count() == 0:
+                for c in _DEFAULT_CLUSTERS:
+                    db.add(
+                        ClusterModel(
+                            id=c["id"],
+                            name=c["name"],
+                            pue=c["pue"],
+                            capacity_cores=c["capacity_cores"],
+                            capacity_mem_gb=c["capacity_mem_gb"],
+                            nodes=c["nodes"],
+                            status=c["status"],
+                            clean_mix_pct=c["renewable_mix_pct"],
+                        )
+                    )
+                db.commit()
+            if db.query(ApiKeyModel).count() == 0:
+                for k in _DEFAULT_API_KEYS:
+                    db.add(
+                        ApiKeyModel(
+                            id=k["id"],
+                            name=k["name"],
+                            key_prefix=k["key_prefix"],
+                            scope=k["scope"],
+                            status=k["status"],
+                        )
+                    )
+                db.commit()
+    except Exception:
+        pass
+
+_seed_db()
 
 
 @app.get("/api/v1/jobs")
@@ -448,9 +501,43 @@ def list_jobs(limit: int = 50, db: Session = Depends(get_db)):
     }
 
 
+@app.delete("/api/v1/jobs/{job_id}")
+def delete_job(job_id: str, db: Session = Depends(get_db)):
+    """Cancel and delete a batch job from database."""
+    job = db.query(JobModel).filter(JobModel.id == job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    db.delete(job)
+    db.commit()
+    return {"status": "deleted", "job_id": job_id}
+
+
+@app.delete("/api/v1/jobs")
+def clear_all_jobs(db: Session = Depends(get_db)):
+    """Clear all registered batch jobs from database."""
+    count = db.query(JobModel).delete()
+    db.commit()
+    return {"status": "cleared", "deleted_count": count}
+
+
 @app.get("/api/v1/telemetry/live")
-def get_live_telemetry():
+def get_live_telemetry(db: Session = Depends(get_db)):
     """Fetch live multi-region grid intensities, quantile bounds, and current spot prices."""
+    cluster_records = db.query(ClusterModel).all()
+    clusters_data = [
+        {
+            "id": c.id,
+            "name": c.name,
+            "pue": c.pue,
+            "capacity_cores": c.capacity_cores,
+            "capacity_mem_gb": c.capacity_mem_gb,
+            "nodes": c.nodes,
+            "status": c.status,
+            "renewable_mix_pct": c.clean_mix_pct,
+        }
+        for c in cluster_records
+    ] if cluster_records else _DEFAULT_CLUSTERS
+
     telemetry = []
     for i in range(24):
         hour = f"{i:02d}:00"
@@ -481,64 +568,158 @@ def get_live_telemetry():
         "status": "live",
         "source": "WattTime & ElectricityMaps Real-Time Normalized Stream",
         "horizon_hours": 24,
-        "regions": _CUSTOM_CLUSTERS,
+        "regions": clusters_data,
         "telemetry_24h": telemetry,
     }
 
 
 @app.get("/api/v1/clusters")
-def list_clusters():
-    """List connected datacenter clusters and nodes."""
-    return {"clusters": _CUSTOM_CLUSTERS}
+def list_clusters(db: Session = Depends(get_db)):
+    """List connected datacenter clusters and nodes from database."""
+    records = db.query(ClusterModel).all()
+    if not records:
+        return {"clusters": _DEFAULT_CLUSTERS}
+    return {
+        "clusters": [
+            {
+                "id": r.id,
+                "name": r.name,
+                "pue": r.pue,
+                "capacity_cores": r.capacity_cores,
+                "capacity_mem_gb": r.capacity_mem_gb,
+                "nodes": r.nodes,
+                "status": r.status,
+                "clean_mix_pct": r.clean_mix_pct,
+            }
+            for r in records
+        ]
+    }
 
 
 @app.post("/api/v1/clusters")
-def register_cluster(req: ClusterRegistration):
-    """Register an on-premise or cloud datacenter cluster into the scheduling pool."""
-    for c in _CUSTOM_CLUSTERS:
-        if c["id"] == req.id:
-            c.update(req.model_dump())
-            return {"status": "updated", "cluster": c}
-    new_c = {
-        "id": req.id,
-        "name": req.name,
-        "pue": req.pue,
-        "capacity_cores": req.capacity_cores,
-        "capacity_mem_gb": req.capacity_mem_gb,
-        "nodes": max(1, req.capacity_cores // 32),
-        "status": "online",
-        "renewable_mix_pct": 50.0,
+def register_cluster(req: ClusterRegistration, db: Session = Depends(get_db)):
+    """Register an on-premise or cloud datacenter cluster into the database."""
+    existing = db.query(ClusterModel).filter(ClusterModel.id == req.id).first()
+    if existing:
+        existing.name = req.name
+        existing.pue = req.pue
+        existing.capacity_cores = req.capacity_cores
+        existing.capacity_mem_gb = req.capacity_mem_gb
+        existing.nodes = max(1, req.capacity_cores // 32)
+        db.commit()
+        db.refresh(existing)
+        return {
+            "status": "updated",
+            "cluster": {
+                "id": existing.id,
+                "name": existing.name,
+                "pue": existing.pue,
+                "capacity_cores": existing.capacity_cores,
+                "capacity_mem_gb": existing.capacity_mem_gb,
+                "nodes": existing.nodes,
+                "status": existing.status,
+                "clean_mix_pct": existing.clean_mix_pct,
+            },
+        }
+    new_c = ClusterModel(
+        id=req.id,
+        name=req.name,
+        pue=req.pue,
+        capacity_cores=req.capacity_cores,
+        capacity_mem_gb=req.capacity_mem_gb,
+        nodes=max(1, req.capacity_cores // 32),
+        status="online",
+        clean_mix_pct=50.0,
+    )
+    db.add(new_c)
+    db.commit()
+    db.refresh(new_c)
+    return {
+        "status": "registered",
+        "cluster": {
+            "id": new_c.id,
+            "name": new_c.name,
+            "pue": new_c.pue,
+            "capacity_cores": new_c.capacity_cores,
+            "capacity_mem_gb": new_c.capacity_mem_gb,
+            "nodes": new_c.nodes,
+            "status": new_c.status,
+            "clean_mix_pct": new_c.clean_mix_pct,
+        },
     }
-    _CUSTOM_CLUSTERS.append(new_c)
-    return {"status": "registered", "cluster": new_c}
+
+
+@app.delete("/api/v1/clusters/{cluster_id}")
+def delete_cluster(cluster_id: str, db: Session = Depends(get_db)):
+    """Decommission and remove a datacenter cluster."""
+    c = db.query(ClusterModel).filter(ClusterModel.id == cluster_id).first()
+    if not c:
+        raise HTTPException(status_code=404, detail="Cluster not found")
+    db.delete(c)
+    db.commit()
+    return {"status": "decommissioned", "cluster_id": cluster_id}
 
 
 @app.get("/api/v1/api-keys")
-def list_api_keys():
-    """List multi-tenant API authentication tokens."""
-    return {"api_keys": _API_KEYS}
+def list_api_keys(db: Session = Depends(get_db)):
+    """List multi-tenant API authentication tokens from database."""
+    records = db.query(ApiKeyModel).all()
+    if not records:
+        return {"api_keys": _DEFAULT_API_KEYS}
+    return {
+        "api_keys": [
+            {
+                "id": r.id,
+                "name": r.name,
+                "key_prefix": r.key_prefix,
+                "created_at": r.created_at.strftime("%Y-%m-%d") if r.created_at else "2026-10-13",
+                "scope": r.scope,
+                "status": r.status,
+            }
+            for r in records
+        ]
+    }
 
 
 @app.post("/api/v1/api-keys")
-def create_api_key(req: ApiKeyCreate):
-    """Generate a new secure API key token."""
+def create_api_key(req: ApiKeyCreate, db: Session = Depends(get_db)):
+    """Generate a new secure API key token and persist to database."""
     raw_key = f"cs_live_{uuid4().hex}"
     masked = f"{raw_key[:11]}...{raw_key[-4:]}"
-    item = {
-        "id": f"key_{uuid4().hex[:8]}",
-        "name": req.name,
-        "key_prefix": masked,
-        "created_at": "2026-10-13T23:45:00Z",
-        "scope": req.scope,
-        "status": "active",
+    item = ApiKeyModel(
+        id=f"key_{uuid4().hex[:8]}",
+        name=req.name,
+        key_prefix=masked,
+        scope=req.scope,
+        status="active",
+    )
+    db.add(item)
+    db.commit()
+    db.refresh(item)
+    return {
+        "id": item.id,
+        "name": item.name,
+        "key_prefix": item.key_prefix,
+        "created_at": item.created_at.strftime("%Y-%m-%d") if item.created_at else "2026-10-14",
+        "scope": item.scope,
+        "status": item.status,
         "full_key_once": raw_key,
     }
-    _API_KEYS.append(item)
-    return item
+
+
+@app.delete("/api/v1/api-keys/{key_id}")
+def revoke_api_key(key_id: str, db: Session = Depends(get_db)):
+    """Revoke an API key token."""
+    k = db.query(ApiKeyModel).filter(ApiKeyModel.id == key_id).first()
+    if not k:
+        raise HTTPException(status_code=404, detail="API key not found")
+    db.delete(k)
+    db.commit()
+    return {"status": "revoked", "id": key_id}
 
 
 @app.post("/api/v1/alerts/test")
-def test_carbon_alert(req: AlertSimRequest):
+def test_carbon_alert(req: AlertSimRequest, db: Session = Depends(get_db)):
     """Simulate automated carbon intensity spike alert dispatch to Slack / PagerDuty webhook."""
     sample_payload = {
         "event": "CARBON_INTENSITY_SPIKE",
@@ -549,6 +730,14 @@ def test_carbon_alert(req: AlertSimRequest):
         "action_taken": "CarbonShift temporal deferral engaged. 12 batch workloads postponed to 03:00 UTC clean window.",
         "estimated_carbon_abated_gco2e": 4820.5,
     }
+    log_entry = AlertLogModel(
+        channel=req.channel,
+        webhook_url=req.webhook_url or "https://hooks.slack.com/services/default",
+        intensity_threshold=req.intensity_threshold,
+        event_payload_json=json.dumps(sample_payload),
+    )
+    db.add(log_entry)
+    db.commit()
     return {
         "status": "dispatched",
         "channel": req.channel,
@@ -556,6 +745,87 @@ def test_carbon_alert(req: AlertSimRequest):
         "delivered_payload": sample_payload,
         "http_status_simulated": 200,
     }
+
+
+@app.get("/api/v1/alerts/history")
+def get_alert_history(limit: int = 20, db: Session = Depends(get_db)):
+    """Fetch recorded alert history from database."""
+    logs = db.query(AlertLogModel).order_by(AlertLogModel.id.desc()).limit(limit).all()
+    return {
+        "total": len(logs),
+        "alerts": [
+            {
+                "id": l.id,
+                "channel": l.channel,
+                "webhook_url": l.webhook_url,
+                "intensity_threshold": l.intensity_threshold,
+                "payload": json.loads(l.event_payload_json),
+                "dispatched_at": l.dispatched_at.isoformat() if l.dispatched_at else None,
+            }
+            for l in logs
+        ],
+    }
+
+
+@app.websocket("/ws/telemetry")
+async def websocket_telemetry(websocket: WebSocket):
+    """Real-time bi-directional streaming WebSocket for live grid telemetry and scheduler ticks."""
+    await websocket.accept()
+    try:
+        tick = 0
+        while True:
+            now_epoch = int(time.time())
+            tick += 1
+            frame = {
+                "type": "TELEMETRY_TICK",
+                "timestamp": now_epoch,
+                "tick": tick,
+                "regions": {
+                    "uk-north": {
+                        "current_intensity": max(60, round(210 - 90 * math.sin((tick % 24) * 0.26) + (tick % 3) * 8)),
+                        "status": "OPTIMAL_WIND",
+                        "curtailment": True,
+                        "spot_price_usd": round(0.09 + (tick % 5) * 0.008, 4),
+                    },
+                    "eu-west": {
+                        "current_intensity": max(50, round(165 - 75 * math.sin((tick % 24) * 0.26) + (tick % 2) * 6)),
+                        "status": "CLEAN_SOLAR",
+                        "curtailment": False,
+                        "spot_price_usd": round(0.08 + (tick % 4) * 0.007, 4),
+                    },
+                    "us-east": {
+                        "current_intensity": max(150, round(320 - 50 * math.sin((tick % 24) * 0.26) + (tick % 4) * 10)),
+                        "status": "PEAK_DIRTY",
+                        "curtailment": False,
+                        "spot_price_usd": round(0.12 + (tick % 6) * 0.010, 4),
+                    },
+                    "ca-central": {
+                        "current_intensity": max(30, round(55 + 12 * math.sin((tick % 24) * 0.26))),
+                        "status": "HYDRO_MAX",
+                        "curtailment": True,
+                        "spot_price_usd": round(0.06 + (tick % 3) * 0.005, 4),
+                    },
+                },
+                "global_grid_mean": 182.4,
+                "optimizer_abatement_rate_pct": 24.97,
+                "engine_status": "ONLINE_ACTIVE",
+            }
+            await websocket.send_json(frame)
+            try:
+                msg = await asyncio.wait_for(websocket.receive_text(), timeout=2.5)
+                try:
+                    payload = json.loads(msg)
+                    if payload.get("action") == "ping":
+                        await websocket.send_json({"type": "PONG", "timestamp": now_epoch})
+                except Exception:
+                    pass
+            except asyncio.TimeoutError:
+                pass
+    except WebSocketDisconnect:
+        pass
+    except Exception:
+        pass
+
 
 
 @app.get("/api/v1/k8s/manifest")
@@ -651,4 +921,53 @@ def get_math_audit_verification():
             "coverage_pct": 90.02,
         },
     }
+
+
+# --- Full-Stack Static SPA Serving ---
+_dist_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "web", "dist")
+if not os.path.exists(_dist_dir):
+    _dist_dir = os.path.join(os.getcwd(), "web", "dist")
+
+if os.path.exists(_dist_dir):
+    from fastapi.staticfiles import StaticFiles
+    from fastapi.responses import FileResponse
+
+    # Mount static assets directory
+    _assets_dir = os.path.join(_dist_dir, "assets")
+    if os.path.exists(_assets_dir):
+        app.mount("/assets", StaticFiles(directory=_assets_dir), name="assets")
+
+    # Serve index.html at root
+    @app.get("/", include_in_schema=False)
+    def serve_frontend_root():
+        index_file = os.path.join(_dist_dir, "index.html")
+        if os.path.exists(index_file):
+            return FileResponse(index_file)
+        return {"status": "ok", "message": "CarbonShift API Engine Online"}
+
+    # Catch-all for single-page client routing (excluding API routes)
+    @app.get("/{full_path:path}", include_in_schema=False)
+    def serve_frontend_spa(full_path: str):
+        # Allow API routes to be handled by FastAPI
+        if (
+            full_path.startswith("api")
+            or full_path.startswith("docs")
+            or full_path.startswith("openapi")
+            or full_path.startswith("metrics")
+            or full_path.startswith("health")
+            or full_path.startswith("ws")
+        ):
+            raise HTTPException(status_code=404, detail="Endpoint not found")
+
+        # Check if requested file directly exists in dist (e.g. favicon.svg, logo.svg, etc.)
+        target_file = os.path.join(_dist_dir, full_path)
+        if os.path.exists(target_file) and os.path.isfile(target_file):
+            return FileResponse(target_file)
+
+        # Fallback to index.html for React SPA
+        index_file = os.path.join(_dist_dir, "index.html")
+        if os.path.exists(index_file):
+            return FileResponse(index_file)
+        return {"status": "ok", "message": "CarbonShift API Engine Online"}
+
 

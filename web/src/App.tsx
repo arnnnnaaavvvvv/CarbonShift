@@ -30,7 +30,7 @@ export default function App() {
     setNotification("Executing 14-day deterministic trace replay (350 jobs) on FastAPI Engine :8000...");
     
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/v1/schedules/replay', {
+      const res = await fetch('/api/v1/schedules/replay', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ num_jobs: 25, horizon_hours: 24, seed: 42 })

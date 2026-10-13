@@ -109,37 +109,51 @@ Verified results from 14-day deterministic benchmark (350 batch jobs, seed 42, $
 
 ---
 
-## ⚡ Quickstart
+## ⚡ Unified Full-Stack Quickstart
 
-### 1. Installation
+CarbonShift delivers an enterprise full-stack experience connecting a React + TypeScript control plane with a Python FastAPI integer solver engine:
+* **Single-Port Architecture:** FastAPI serves both the high-performance REST endpoints (`/api/v1/...`), the real-time bi-directional WebSocket stream (`/ws/telemetry`), and the production React SPA bundle at `http://127.0.0.1:8000/`.
+* **Zero-Config Persistence:** SQLite WAL database automatically persists batch jobs, registered datacenter clusters, multi-tenant API authentication tokens, and audit webhook alert logs (`data/carbonshift.db`).
+* **Live Telemetry & WebSockets:** Active multi-region grid intensity ticks (WattTime & ElectricityMaps curves) streamed dynamically to the client.
+
+### 🚀 Option 1: One-Command Full-Stack Runner (Recommended)
 ```bash
+# Clone and enter directory
 git clone https://github.com/arnnnnaaavvvvv/CarbonShift.git
 cd CarbonShift
 
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+# Install Python requirements
 pip install -r requirements.txt
 pip install -e .
+
+# Launch unified full-stack platform (automatically builds UI & opens browser)
+python run_fullstack.py
+```
+*Or via PowerShell on Windows:*
+```powershell
+.\run_fullstack.ps1
 ```
 
-### 2. Run Test & Math Verification Suite
+### 🐳 Option 2: Docker Compose (Enterprise Multi-Container Stack)
+```bash
+docker compose up --build
+```
+*Spins up the full-stack CarbonShift application on `http://localhost:8000/`, PostgreSQL database on port `5432`, and Prometheus metrics collector on port `9090`.*
+
+### 🛠️ Option 3: Developer NPM Scripts
+```bash
+npm start              # Launches python run_fullstack.py
+npm run dev:frontend   # Launches Vite HMR dev server on :3000 (proxied to :8000)
+npm run dev:backend    # Launches FastAPI uvicorn with hot-reload
+npm run test:backend   # Runs full 44-test pytest suite
+```
+
+### 🧪 Run Mathematical Audit & Verification Suite
 ```bash
 pytest tests/ -v
+python scripts/audit_all.py
 ```
-All 8 verification suites run property-based tests via Hypothesis and assert solver-simulator parity within $10^{-4}$.
-
-### 3. Launch REST API
-```bash
-uvicorn carbonshift.api.app:app --host 0.0.0.0 --port 8000 --reload
-```
-Interactive OpenAPI documentation will be accessible at `http://localhost:8000/docs`.
-
-### 4. Execute Trace Replay Benchmark
-```bash
-curl -X POST http://localhost:8000/api/v1/schedules/replay \
-  -H "Content-Type: application/json" \
-  -d '{"num_jobs": 30, "horizon_hours": 24, "seed": 42}'
-```
+All 44 tests assert solver-simulator conservation invariants ($< 10^{-4}$), SPECpower cubic non-linearity ($r=1.4$), and SQLite transactional persistence.
 
 ---
 

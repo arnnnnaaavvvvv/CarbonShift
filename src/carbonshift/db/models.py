@@ -68,3 +68,41 @@ class DecisionModel(Base):
     explanation_json = Column(Text, nullable=False)
 
     schedule = relationship("ScheduleModel", back_populates="decisions")
+
+
+class ClusterModel(Base):
+    __tablename__ = "clusters"
+
+    id = Column(String(64), primary_key=True)
+    name = Column(String(128), nullable=False)
+    pue = Column(Float, nullable=False, default=1.15)
+    capacity_cores = Column(Integer, nullable=False, default=256)
+    capacity_mem_gb = Column(Integer, nullable=False, default=1024)
+    nodes = Column(Integer, nullable=False, default=8)
+    status = Column(String(32), nullable=False, default="online")
+    clean_mix_pct = Column(Float, nullable=False, default=50.0)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
+class ApiKeyModel(Base):
+    __tablename__ = "api_keys"
+
+    id = Column(String(64), primary_key=True, default=lambda: f"key_{uuid4().hex[:8]}")
+    name = Column(String(128), nullable=False)
+    key_prefix = Column(String(64), nullable=False)
+    scope = Column(String(64), nullable=False, default="Full Admin")
+    status = Column(String(32), nullable=False, default="active")
+    hashed_key = Column(String(128), nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
+class AlertLogModel(Base):
+    __tablename__ = "alert_logs"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    channel = Column(String(64), nullable=False, default="slack")
+    webhook_url = Column(String(256), nullable=False)
+    intensity_threshold = Column(Float, nullable=False)
+    event_payload_json = Column(Text, nullable=False)
+    dispatched_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+

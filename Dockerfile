@@ -1,7 +1,14 @@
-# Multi-Stage Production Dockerfile for CarbonShift Engine
-# Stage 1: Build & Dependencies
-FROM python:3.11-slim AS builder
+# Multi-Stage Production Full-Stack Dockerfile for CarbonShift
+# Stage 1: Frontend Build (React + TypeScript + Vite)
+FROM node:20-alpine AS frontend-builder
+WORKDIR /web
+COPY web/package*.json ./
+RUN npm ci
+COPY web/ ./
+RUN npm run build
 
+# Stage 2: Python Backend Build & Dependencies
+FROM python:3.11-slim AS python-builder
 WORKDIR /build
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -11,7 +18,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt pyproject.toml ./
 RUN pip install --no-cache-dir --user -r requirements.txt
 
-# Stage 2: Runtime Minimal Image
+# Stage 3: Runtime Minimal Image
 FROM python:3.11-slim AS runtime
 
 # Create non-root system user with explicit UID/GID
@@ -20,11 +27,14 @@ RUN groupadd -g 10001 carbonshift && \
 
 WORKDIR /app
 
-# Copy installed python dependencies from builder
-COPY --from=builder /root/.local /home/carbonshift/.local
+# Copy installed python dependencies from python-builder
+COPY --from=python-builder /root/.local /home/carbonshift/.local
 ENV PATH=/home/carbonshift/.local/bin:$PATH
 
-# Copy source code and configuration
+# Copy built frontend SPA assets from frontend-builder
+COPY --from=frontend-builder --chown=carbonshift:carbonshift /web/dist /app/web/dist
+
+# Copy backend source code and configuration
 COPY --chown=carbonshift:carbonshift src/ ./src/
 COPY --chown=carbonshift:carbonshift config/ ./config/
 COPY --chown=carbonshift:carbonshift pyproject.toml ./

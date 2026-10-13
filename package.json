@@ -1,0 +1,25 @@
+{
+  "name": "carbonshift",
+  "version": "1.0.0",
+  "description": "Autonomous Carbon-Aware Workload Scheduler & Trace Replay Platform",
+  "scripts": {
+    "start": "python run_fullstack.py",
+    "dev:backend": "python -m uvicorn carbonshift.api.app:app --host 127.0.0.1 --port 8000 --reload",
+    "dev:frontend": "cd web && npm run dev",
+    "build:frontend": "cd web && npm run build",
+    "test:backend": "python -m pytest -q",
+    "audit": "python scripts/audit_all.py"
+  },
+  "keywords": [
+    "carbon-aware",
+    "cloud-scheduler",
+    "kubernetes",
+    "sustainability",
+    "fastapi",
+    "react",
+    "or-tools",
+    "saas"
+  ],
+  "author": "Arnav Singh",
+  "license": "MIT"
+}

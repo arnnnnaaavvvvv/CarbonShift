@@ -23,23 +23,13 @@ export const EsgCertificateModal: React.FC<EsgCertificateModalProps> = ({ isOpen
 
   const handleDownloadCsv = () => {
     confetti({
-      particleCount: 100,
-      spread: 70,
+      particleCount: 120,
+      spread: 75,
       origin: { y: 0.6 },
     });
-
-    const csvContent = 
-`Strategy,Total Carbon (gCO2e),CO2 Saved (%),Total Cost (USD),Cost Delta (%),Deadline Miss Rate (%)
-Baseline A: Run-Immediately,69908.13,0.00,32.77,0.00,0.00
-Baseline B: Greedy Lowest-Carbon,63472.91,9.21,27.49,-16.12,0.00
-Baseline C: Delay-to-Deadline,53317.41,23.73,23.74,-27.55,0.00
-CarbonShift: CP-SAT Optimizer,51624.62,26.15,22.91,-30.09,0.00
-Baseline E: Theoretical Oracle,51624.50,26.15,22.92,-30.05,0.00`;
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
+    // Direct download from FastAPI full-stack endpoint
     const link = document.createElement('a');
-    link.setAttribute('href', url);
+    link.href = '/api/v1/reports/esg?format=csv';
     link.setAttribute('download', 'CarbonShift_Audited_ESG_Report.csv');
     document.body.appendChild(link);
     link.click();
