@@ -1,4 +1,4 @@
-name: Mathematical Verification & Benchmark Suite
+name: Verification & Benchmark Suite
 
 on:
   push:
@@ -23,6 +23,10 @@ jobs:
           pip install -r requirements.txt
           pip install -e .
 
-      - name: Verify Mathematical Invariants & Parity (Pytest + Hypothesis)
+      - name: Run Mathematical Verification Tests (Golden Math, Properties, Parity)
         run: |
           pytest tests/ -v
+
+      - name: Run Benchmark Smoke Test (Walk-Forward Bootstrap)
+        run: |
+          python scripts/run_bench.py

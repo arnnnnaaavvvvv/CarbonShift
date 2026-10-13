@@ -1,7 +1,7 @@
-"""Google OR-Tools CP-SAT discrete optimization solver.
+"""Google OR-Tools CP-SAT discrete optimization solver with Robust Mode and Fallback.
 
 Implements multi-objective carbon, cost, and deadline-risk minimization
-with exact integer scaling (S=1000) and multi-dimensional capacity constraints.
+with exact integer scaling (S=1000), robust quantile planning, and heuristic fallback.
 
 @see docs/MATH.md §4 and docs/BLUEPRINT.md §5
 """
@@ -25,6 +25,7 @@ from carbonshift.energy.carbon_calc import (
     calculate_job_compute_footprint,
     calculate_transfer_footprint,
 )
+from carbonshift.baselines.greedy_carbon import schedule_greedy_lowest_carbon_now
 
 
 class CPSatScheduler:
@@ -52,17 +53,17 @@ class CPSatScheduler:
         safety_margin_slots: int = 1,
         intensity_quantile: str = "intensity_p75",
         max_time_seconds: float = 10.0,
+        enable_checkpointing: bool = False,
     ) -> Schedule:
-        """Formulate and solve the discrete optimization problem."""
+        """Formulate and solve the discrete optimization problem with greedy fallback."""
         start_time_wall = time.perf_counter()
         model = cp_model.CpModel()
 
         region_lookup = {r.id: r for r in regions}
         slot_duration_sec = slots[0].duration_hours * 3600.0 if slots else 3600.0
 
-        # Candidate start variables: x[j_idx, r_id, s_idx]
         x_vars: Dict[Tuple[int, str, int], cp_model.IntVar] = {}
-        candidate_metrics: Dict[Tuple[int, str, int], Tuple[float, float, float]] = {}
+        candidate_metrics: Dict[Tuple[int, str, int], Tuple[float, float, float, float]] = {}
 
         for j_idx, job in enumerate(jobs):
             job_duration_slots = max(1, math.ceil(job.duration_seconds / slot_duration_sec))
@@ -90,15 +91,13 @@ class CPSatScheduler:
                 reg_carbon_lookup = carbon_telemetry.get(region.id, {})
 
                 for s_idx, slot in enumerate(slots):
-                    # Candidate start epoch: if scheduled in arrival slot, starts upon arrival; else slot start
                     cand_start_epoch = max(earliest_epoch, slot.start_epoch_s)
-                    # Cannot start in slot if earliest_epoch is past slot end
                     if earliest_epoch >= slot.end_epoch_s:
                         continue
                     
                     cand_end_epoch = cand_start_epoch + job.duration_seconds
                     
-                    # Strict deadline check (with optional safety margin)
+                    # Strict deadline check
                     if cand_end_epoch > job.deadline_epoch_s:
                         continue
 
@@ -115,7 +114,6 @@ class CPSatScheduler:
                     tot_carbon = c_comp + c_xfer
                     tot_cost = cost_comp + cost_xfer
                     
-                    # Proximity to deadline penalty
                     slack_remaining_sec = job.deadline_epoch_s - cand_end_epoch
                     risk_penalty = max(0.0, 10000.0 - slack_remaining_sec) / 1000.0
 
@@ -138,7 +136,6 @@ class CPSatScheduler:
 
                 for j_idx, job in enumerate(jobs):
                     job_duration_slots = max(1, math.ceil(job.duration_seconds / slot_duration_sec))
-                    # A job is active at slot t if it started at s where: t - duration + 1 <= s <= t
                     for s in range(max(0, t - job_duration_slots + 1), t + 1):
                         var_key = (j_idx, region.id, s)
                         if var_key in x_vars:
@@ -168,7 +165,7 @@ class CPSatScheduler:
 
         model.Minimize(sum(objective_terms))
 
-        # Solve model
+        # Solve model with timeout
         solver = cp_model.CpSolver()
         solver.parameters.max_time_in_seconds = max_time_seconds
         solver.parameters.num_workers = 4
@@ -176,62 +173,81 @@ class CPSatScheduler:
 
         solve_time_ms = (time.perf_counter() - start_time_wall) * 1000.0
 
+        # FALLBACK: If solver infeasible or times out, fall back to Greedy Lowest-Carbon heuristic
+        if status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
+            fallback_sched = schedule_greedy_lowest_carbon_now(
+                jobs=jobs,
+                regions=regions,
+                slots=slots,
+                carbon_telemetry=carbon_telemetry,
+                power_model=self.power_model,
+            )
+            return Schedule(
+                strategy_name="CP-SAT (Fallback: Greedy)",
+                decisions=fallback_sched.decisions,
+                total_carbon_gco2e=fallback_sched.total_carbon_gco2e,
+                total_cost_usd=fallback_sched.total_cost_usd,
+                deadline_misses=fallback_sched.deadline_misses,
+                deadline_miss_rate=fallback_sched.deadline_miss_rate,
+                solver_status="HEURISTIC_FALLBACK",
+                solve_time_ms=round(solve_time_ms, 2),
+                optimality_gap=1.0,
+            )
+
         decisions: List[Decision] = []
         total_carbon = 0.0
         total_cost = 0.0
+        status_str = "OPTIMAL" if status == cp_model.OPTIMAL else "FEASIBLE"
 
-        status_str = "OPTIMAL" if status == cp_model.OPTIMAL else ("FEASIBLE" if status == cp_model.FEASIBLE else "INFEASIBLE")
+        for var_key, var in x_vars.items():
+            if solver.Value(var) == 1:
+                j_idx, r_id, s_idx = var_key
+                job = jobs[j_idx]
+                carbon_val, cost_val, _, actual_start_epoch = candidate_metrics[var_key]
+                
+                src_reg = region_lookup.get(job.source_region, regions[0])
+                _, c_now, cost_now = calculate_job_compute_footprint(
+                    job=job,
+                    start_epoch_s=job.arrival_epoch_s,
+                    region=src_reg,
+                    slots=slots,
+                    carbon_lookup=carbon_telemetry.get(job.source_region, {}),
+                    power_model=self.power_model,
+                )
 
-        if status in (cp_model.OPTIMAL, cp_model.FEASIBLE):
-            for var_key, var in x_vars.items():
-                if solver.Value(var) == 1:
-                    j_idx, r_id, s_idx = var_key
-                    job = jobs[j_idx]
-                    carbon_val, cost_val, _, actual_start_epoch = candidate_metrics[var_key]
-                    
-                    # Compute what Run-Now baseline would have consumed in source region
-                    src_reg = region_lookup.get(job.source_region, regions[0])
-                    arr_slot = min(len(slots) - 1, max(0, int(job.arrival_epoch_s // slot_duration_sec)))
-                    _, c_now, cost_now = calculate_job_compute_footprint(
-                        job=job,
-                        start_epoch_s=job.arrival_epoch_s,
-                        region=src_reg,
-                        slots=slots,
-                        carbon_lookup=carbon_telemetry.get(job.source_region, {}),
-                        power_model=self.power_model,
+                saved_c = max(0.0, c_now - carbon_val)
+                delta_k = cost_val - cost_now
+                delay_h = (actual_start_epoch - job.arrival_epoch_s) / 3600.0
+
+                factors = []
+                if r_id != job.source_region:
+                    factors.append(f"Migrated to clean region {r_id}")
+                if delay_h > 0.5:
+                    factors.append(f"Deferred compute by {delay_h:.1f}h to low-carbon window")
+                if not factors:
+                    factors.append("Dispatched immediately (cleanest window)")
+
+                decisions.append(
+                    Decision(
+                        job_id=job.id,
+                        selected_region=r_id,
+                        scheduled_start_epoch_s=actual_start_epoch,
+                        assigned_slot=s_idx,
+                        estimated_carbon_gco2e=round(carbon_val, 2),
+                        estimated_cost_usd=round(cost_val, 4),
+                        explanation=Explanation(
+                            carbon_saved_vs_now_gco2e=round(saved_c, 2),
+                            cost_delta_vs_now_usd=round(delta_k, 4),
+                            delay_hours=round(max(0.0, delay_h), 2),
+                            spatial_shift_occurred=(r_id != job.source_region),
+                            decision_factors=factors,
+                        ),
                     )
+                )
+                total_carbon += carbon_val
+                total_cost += cost_val
 
-                    saved_c = max(0.0, c_now - carbon_val)
-                    delta_k = cost_val - cost_now
-                    delay_h = (actual_start_epoch - job.arrival_epoch_s) / 3600.0
-
-                    factors = []
-                    if r_id != job.source_region:
-                        factors.append(f"Migrated to clean region {r_id}")
-                    if delay_h > 0.5:
-                        factors.append(f"Deferred compute by {delay_h:.1f}h to low-carbon window")
-                    if not factors:
-                        factors.append("Dispatched immediately (cleanest window)")
-
-                    decisions.append(
-                        Decision(
-                            job_id=job.id,
-                            selected_region=r_id,
-                            scheduled_start_epoch_s=actual_start_epoch,
-                            assigned_slot=s_idx,
-                            estimated_carbon_gco2e=round(carbon_val, 2),
-                            estimated_cost_usd=round(cost_val, 4),
-                            explanation=Explanation(
-                                carbon_saved_vs_now_gco2e=round(saved_c, 2),
-                                cost_delta_vs_now_usd=round(delta_k, 4),
-                                delay_hours=round(max(0.0, delay_h), 2),
-                                spatial_shift_occurred=(r_id != job.source_region),
-                                decision_factors=factors,
-                            ),
-                        )
-                    )
-                    total_carbon += carbon_val
-                    total_cost += cost_val
+        raw_obj = solver.ObjectiveValue()
 
         return Schedule(
             strategy_name="CP-SAT Optimizer",
@@ -243,4 +259,5 @@ class CPSatScheduler:
             solver_status=status_str,
             solve_time_ms=round(solve_time_ms, 2),
             optimality_gap=0.0 if status == cp_model.OPTIMAL else 0.05,
+            raw_solver_objective=raw_obj,
         )

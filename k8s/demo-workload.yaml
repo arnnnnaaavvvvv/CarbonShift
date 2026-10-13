@@ -1,0 +1,51 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: carbonshift-batch-workload-01
+  namespace: default
+  labels:
+    carbonshift/flexible: "true"
+    carbonshift/priority: "batch"
+spec:
+  template:
+    metadata:
+      labels:
+        carbonshift/flexible: "true"
+    spec:
+      schedulingGates:
+        - name: carbonshift.io/gate
+      restartPolicy: OnFailure
+      containers:
+        - name: batch-processor
+          image: busybox:latest
+          command: ["sh", "-c", "echo 'Carbon-aware batch execution started'; sleep 10; echo 'Batch completed'"]
+          resources:
+            requests:
+              cpu: "1"
+              memory: "512Mi"
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: carbonshift-batch-workload-02
+  namespace: default
+  labels:
+    carbonshift/flexible: "true"
+    carbonshift/priority: "batch"
+spec:
+  template:
+    metadata:
+      labels:
+        carbonshift/flexible: "true"
+    spec:
+      schedulingGates:
+        - name: carbonshift.io/gate
+      restartPolicy: OnFailure
+      containers:
+        - name: batch-processor
+          image: busybox:latest
+          command: ["sh", "-c", "echo 'High-priority deferred compute initiated'; sleep 15; echo 'Done'"]
+          resources:
+            requests:
+              cpu: "2"
+              memory: "1Gi"

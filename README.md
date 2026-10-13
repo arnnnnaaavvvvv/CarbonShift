@@ -80,15 +80,15 @@ flowchart TD
 
 ## 📊 Evaluated Baselines & Benchmark Protocol
 
-CarbonShift compares strategies across matched deadline-miss curves by sweeping the uncertainty safety margin $m$:
+Verified results from 14-day deterministic benchmark (350 batch jobs, seed 42, $B = 10,000$ block bootstrap resamples) recorded in [`results/benchmark_summary.json`](results/benchmark_summary.json):
 
-| Strategy | Description | Typical CO₂ Savings | Deadline Miss Rate |
-| :--- | :--- | :--- | :--- |
-| **Baseline A (Run-Now)** | Dispatches immediately in origin region upon arrival (Vanilla K8s). | 0.0% (Reference) | 0.0% |
-| **Baseline B (Greedy-Now)** | Chooses instantaneous cleanest region at arrival slot. | 6–10% | 0.0% |
-| **Baseline C (Delay-Greedy)** | Delays to cleanest slot prior to deadline without resolving capacity. | 14–18% | 1.5–4.2% (Capacity contention) |
-| **CarbonShift (CP-SAT)** | Global joint integer optimization across capacity, cost, and carbon. | **24–28% (±1.2%)** | **0.00%** |
-| **Baseline E (Oracle)** | Upper performance bound with perfect ex-post forecast foresight. | 31–34% | 0.00% |
+| Strategy | Total Carbon ($\text{gCO}_2\text{e}$) | CO₂ Saved (%) | Total Cost (USD) | Cost Delta (%) | Deadline Miss Rate |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Baseline A (Run-Now)** | 70,408.45 g | 0.0% (Reference) | $33.00 | 0.0% | 0.0% |
+| **Baseline B (Greedy-Now)** | 63,578.51 g | 9.70% | $27.53 | -16.59% | 0.0% |
+| **Baseline C (Delay-Greedy)** | 52,806.34 g | 25.00% | $23.50 | -28.79% | 0.0% |
+| **CarbonShift (CP-SAT)** | **51,624.62 g** | **26.68%** (95% CI: **[22.01%, 29.52%]**) | **$22.91** | **-30.58%** | **0.0%** |
+| **Baseline E (Oracle Bound)**| 51,624.50 g | 26.68% | $22.92 | -30.55% | 0.0% |
 
 ---
 
@@ -161,6 +161,17 @@ CarbonShift/
 ├── tests/                       # Exact numeric tests, Hypothesis properties, parity checks
 └── .github/workflows/           # CI workflow running automated verification
 ```
+
+---
+
+## ⚠️ Limitations & Methodological Assumptions
+
+1. **Calibrated vs. Direct In-Band Power Telemetry:**
+   Energy consumption is modeled using non-linear SPECpower calibration ($r = 1.4$) rather than real-time bare-metal IPMI/RAPL hardware sensors. This abstracts node-level fan ramping and temperature-induced cooling changes.
+2. **Average vs. Marginal Grid Emission Factors:**
+   Telemetry utilizes grid average carbon intensity factors ($\text{gCO}_2\text{e/kWh}$). While average intensity is standard for Scope 2 GHG accounting, true marginal emissions (identifying the specific fossil turbine displaced by load shifting) require locational marginal pricing and grid dispatch curves.
+3. **Trace-to-Grid Regional Mapping Assumptions:**
+   Cluster traces from Google/Alibaba omit geographical datacenter tags; regions are assigned via structured simulation topologies representing heterogeneous generation mixes (wind-heavy UK, hydro-rich Nordics/EU, thermal-heavy US/Asia).
 
 ---
 

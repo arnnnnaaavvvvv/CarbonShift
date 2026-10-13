@@ -93,3 +93,4 @@ class Schedule(DomainBase):
     solver_status: str = "OPTIMAL"  # 'OPTIMAL', 'FEASIBLE', 'HEURISTIC'
     solve_time_ms: float = 0.0
     optimality_gap: float = 0.0
+    raw_solver_objective: Optional[float] = None

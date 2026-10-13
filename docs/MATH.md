@@ -114,7 +114,43 @@ All unit test suites must verify this exact numerical calculation:
 
 ---
 
-## 4. Integer Scaling & Exactness Proof
+## 3. Worked Numeric Examples & Golden Tests
+
+### 3.1 Canonical Worked Example (§1.3)
+See §1.3 for detailed step-by-step breakdown.
+*   Total Carbon: $695.4730\text{ gCO}_2\text{e}$
+*   Total Cost: $\$2.088057$
+
+### 3.2 Hand-Computed Golden Test Cases (Pre-Computed Exact Values)
+All tests in `tests/test_golden_math.py` assert these exact values:
+
+Server baseline: $P_{\text{idle}} = 0.100\text{ kW}, P_{\text{max}} = 0.500\text{ kW}, r = 1.4, u = 0.5 \implies P(0.5) = 0.2515716566510398\text{ kW}$.
+
+1.  **1-Slot Job:**  
+    $\Delta = 1\text{h}, \text{PUE} = 1.0, I_0 = 200.0\text{ g/kWh}$.  
+    $E = 0.2515716566510398\text{ kWh}$.  
+    $\mathbf{C = 50.31433133020796\text{ gCO}_2\text{e}}$.
+
+2.  **3-Slot Job with Variable Intensities:**  
+    $\Delta = 3\text{h}, \text{PUE} = 1.0, I = [300, 150, 100]\text{ g/kWh}$.  
+    $C = 0.2515716566510398 \times (300 + 150 + 100) = \mathbf{138.36441115807189\text{ gCO}_2\text{e}}$.
+
+3.  **Partial Overlap Job Across Slot Boundary:**  
+    $t \in [1800\text{s}, 7200\text{s}] (1.5\text{h}), \text{PUE} = 1.0, I_0 = 300 (\omega_0 = 0.5), I_1 = 150 (\omega_1 = 1.0)$.  
+    $C = 0.2515716566510398 \times (0.5 \times 300 + 1.0 \times 150) = \mathbf{75.47149699531194\text{ gCO}_2\text{e}}$.
+
+4.  **PUE ≠ 1.0 Job:**  
+    $\Delta = 1\text{h}, \text{PUE} = 1.25, I_0 = 200.0\text{ g/kWh}$.  
+    $C = 0.2515716566510398 \times 1.25 \times 200.0 = \mathbf{62.89291416275995\text{ gCO}_2\text{e}}$.
+
+5.  **Cross-Region Data Transfer:**  
+    $50\text{ GB}, \kappa = 0.014\text{ kWh/GB}, I_{\text{net}} = 400.0\text{ g/kWh}$.  
+    $E = 0.70\text{ kWh}, \mathbf{C = 280.0\text{ gCO}_2\text{e}}$.
+
+6.  **Slot-Boundary Invariants:**  
+    - Starts exactly on slot boundary $t = 3600\text{s}$: $\omega_0 = 0.0, \omega_1 = 1.0$.
+    - Ends exactly on slot boundary $t = 3600\text{s}$: $\omega_0 = 1.0, \omega_1 = 0.0$.
+    - Zero-length job: duration $0\text{s} \implies \omega_s = 0.0, C = 0.0\text{ gCO}_2\text{e}$.
 
 ### 4.1 CP-SAT Quantization
 Continuous carbon $c_{j,r,s} \in \mathbb{R}^+$ is scaled by fixed multiplier $S = 1000$ (milligram precision):
