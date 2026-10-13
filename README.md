@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="docs/assets/logo.jpg" alt="CarbonShift Ultra HD Logo" width="180" style="border-radius: 50%;" />
+
 # CarbonShift
 ### Autonomous Carbon-Aware Workload Scheduler & Trace-Replay Simulator
 

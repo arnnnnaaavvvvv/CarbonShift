@@ -11,6 +11,7 @@ import {
   Calendar,
   Sparkles
 } from 'lucide-react';
+import { CarbonShiftLogo } from './CarbonShiftLogo';
 
 interface EsgCertificateModalProps {
   isOpen: boolean;
@@ -58,8 +59,8 @@ Baseline E: Theoretical Oracle,51624.50,26.15,22.92,-30.05,0.00`;
 
         {/* Certificate Header */}
         <div className="text-center mb-6">
-          <div className="inline-flex p-3 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 mb-3 shadow-lg shadow-emerald-500/20">
-            <Award className="w-8 h-8" />
+          <div className="flex justify-center mb-3">
+            <CarbonShiftLogo size={64} glow={true} />
           </div>
           <span className="text-[11px] font-mono font-bold tracking-widest text-emerald-400 uppercase block mb-1">
             Official Compliance & Verification Certificate

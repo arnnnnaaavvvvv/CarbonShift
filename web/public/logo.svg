@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <!-- Ultra-vivid neon gradient -->
+    <linearGradient id="carbonNeon" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4ade80" />
+      <stop offset="50%" stop-color="#22c55e" />
+      <stop offset="100%" stop-color="#16a34a" />
+    </linearGradient>
+
+    <!-- Ambient Neon Bloom Glow Filter -->
+    <filter id="neonGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Deep Obsidian Circular Background -->
+  <rect width="512" height="512" fill="#030712" rx="256" />
+
+  <!-- Outer Neon Badge Ring -->
+  <circle
+    cx="256"
+    cy="256"
+    r="212"
+    stroke="url(#carbonNeon)"
+    stroke-width="18"
+    filter="url(#neonGlow)"
+  />
+
+  <!-- Stylized Cloud Silhouette -->
+  <!-- Opening at the bottom between x=210 and x=302 for the dual shift arrows -->
+  <path
+    d="M 195 328 H 155 C 122 328 100 302 100 270 C 100 238 126 216 158 216 C 163 170 200 135 256 135 C 310 135 348 170 354 216 C 386 216 412 238 412 270 C 412 302 390 328 357 328 H 317"
+    stroke="url(#carbonNeon)"
+    stroke-width="18"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    filter="url(#neonGlow)"
+  />
+
+  <!-- Bold CO2 Typography inside Cloud -->
+  <g filter="url(#neonGlow)" fill="url(#carbonNeon)">
+    <!-- Letter 'C' -->
+    <path
+      d="M 230 235 C 220 220 202 212 184 212 C 154 212 132 234 132 268 C 132 302 154 324 184 324 C 202 324 220 316 230 301"
+      stroke="url(#carbonNeon)"
+      stroke-width="20"
+      stroke-linecap="round"
+      fill="none"
+    />
+    
+    <!-- Letter 'O' -->
+    <circle
+      cx="256"
+      cy="268"
+      r="38"
+      stroke="url(#carbonNeon)"
+      stroke-width="20"
+      fill="none"
+    />
+
+    <!-- Subscript '2' -->
+    <path
+      d="M 312 268 C 312 258 322 250 334 250 C 346 250 354 258 354 268 C 354 278 344 286 334 294 L 312 312 H 356"
+      stroke="url(#carbonNeon)"
+      stroke-width="15"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      fill="none"
+    />
+  </g>
+
+  <!-- Dual Shift Arrows (Left: UP, Right: DOWN) -->
+  <g stroke="url(#carbonNeon)" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" filter="url(#neonGlow)">
+    <!-- Upward Shift Arrow (Green Generation / Clean Dispatch) -->
+    <line x1="234" y1="388" x2="234" y2="330" />
+    <polyline points="218,346 234,330 250,346" />
+
+    <!-- Downward Shift Arrow (Carbon & Emission Abatement) -->
+    <line x1="278" y1="330" x2="278" y2="388" />
+    <polyline points="262,372 278,388 294,372" />
+  </g>
+</svg>

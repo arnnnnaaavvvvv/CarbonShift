@@ -12,6 +12,7 @@ import {
   Activity,
   Globe2
 } from 'lucide-react';
+import { CarbonShiftLogo } from './CarbonShiftLogo';
 
 interface HeroPitchProps {
   onExploreScheduler: () => void;
@@ -32,51 +33,73 @@ export const HeroPitch: React.FC<HeroPitchProps> = ({
         <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
         <div className="absolute bottom-0 left-1/4 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
-        <div className="relative z-10 max-w-4xl">
-          {/* Hackathon Pitch Ribbon */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-semibold mb-6 shimmer-badge">
-            <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-            <span>NATIONAL LEVEL HACKATHON 2026 • MATHEMATICALLY PROVEN EMISSIONS ABATEMENT</span>
+        <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-10">
+          <div className="max-w-3xl">
+            {/* Hackathon Pitch Ribbon */}
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-semibold mb-6 shimmer-badge">
+              <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+              <span>NATIONAL LEVEL HACKATHON 2026 • MATHEMATICALLY PROVEN EMISSIONS ABATEMENT</span>
+            </div>
+
+            <h1 className="font-display font-extrabold text-4xl md:text-6xl text-white tracking-tight leading-[1.1] mb-6">
+              Dispatch Cloud Batch Jobs When{' '}
+              <span className="text-gradient-emerald">The Grid Runs Clean.</span>
+            </h1>
+
+            <p className="text-slate-300 text-base md:text-lg leading-relaxed mb-8 max-w-2xl">
+              Modern cloud datacenters emit gigatons of carbon because flexible batch workloads run indiscriminately 
+              during peak fossil generation. <strong className="text-white">CarbonShift</strong> is an autonomous orchestrator that 
+              dynamically shifts batch jobs across <strong>Time</strong> (temporal deferral) and <strong>Space</strong> (spatial migration), 
+              abating over <strong className="text-emerald-400">24.97% CO₂</strong> and saving <strong className="text-cyan-400">30.09% cost</strong> with 
+              mathematically guaranteed <strong className="text-white">zero deadline misses</strong>.
+            </p>
+
+            {/* Call to Action Buttons */}
+            <div className="flex flex-wrap items-center gap-4">
+              <button
+                onClick={onExploreScheduler}
+                className="btn-primary !py-3 !px-6 text-sm flex items-center gap-2 group"
+              >
+                <span>Launch Live Scheduling Studio</span>
+                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+              </button>
+
+              <button
+                onClick={onExploreAudit}
+                className="btn-secondary !py-3 !px-5 text-sm flex items-center gap-2"
+              >
+                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                <span>Inspect Mathematical Audit</span>
+              </button>
+
+              <button
+                onClick={onExploreK8s}
+                className="btn-secondary !py-3 !px-5 text-sm flex items-center gap-2 text-slate-300"
+              >
+                <Server className="w-4 h-4 text-purple-400" />
+                <span>Kubernetes Pod Gate Demo</span>
+              </button>
+            </div>
           </div>
 
-          <h1 className="font-display font-extrabold text-4xl md:text-6xl text-white tracking-tight leading-[1.1] mb-6">
-            Dispatch Cloud Batch Jobs When{' '}
-            <span className="text-gradient-emerald">The Grid Runs Clean.</span>
-          </h1>
-
-          <p className="text-slate-300 text-base md:text-lg leading-relaxed mb-8 max-w-3xl">
-            Modern cloud datacenters emit gigatons of carbon because flexible batch workloads run indiscriminately 
-            during peak fossil generation. <strong className="text-white">CarbonShift</strong> is an autonomous orchestrator that 
-            dynamically shifts batch jobs across <strong>Time</strong> (temporal deferral) and <strong>Space</strong> (spatial migration), 
-            abating over <strong className="text-emerald-400">24.97% CO₂</strong> and saving <strong className="text-cyan-400">30.09% cost</strong> with 
-            mathematically guaranteed <strong className="text-white">zero deadline misses</strong>.
-          </p>
-
-          {/* Call to Action Buttons */}
-          <div className="flex flex-wrap items-center gap-4">
-            <button
-              onClick={onExploreScheduler}
-              className="btn-primary !py-3 !px-6 text-sm flex items-center gap-2 group"
-            >
-              <span>Launch Live Scheduling Studio</span>
-              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-            </button>
-
-            <button
-              onClick={onExploreAudit}
-              className="btn-secondary !py-3 !px-5 text-sm flex items-center gap-2"
-            >
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              <span>Inspect Mathematical Audit</span>
-            </button>
-
-            <button
-              onClick={onExploreK8s}
-              className="btn-secondary !py-3 !px-5 text-sm flex items-center gap-2 text-slate-300"
-            >
-              <Server className="w-4 h-4 text-purple-400" />
-              <span>Kubernetes Pod Gate Demo</span>
-            </button>
+          {/* Ultra HD Official Logo Showcase Card */}
+          <div className="w-full lg:w-auto shrink-0 flex flex-col items-center justify-center p-7 rounded-3xl glass-panel border border-emerald-500/30 bg-gradient-to-b from-emerald-950/40 via-slate-900/70 to-slate-950/90 shadow-2xl shadow-emerald-950/50 group mx-auto lg:mx-0">
+            <div className="relative mb-5">
+              <div className="absolute -inset-4 bg-gradient-to-r from-emerald-500 to-lime-500 rounded-full blur-2xl opacity-40 group-hover:opacity-75 transition-opacity duration-700"></div>
+              <CarbonShiftLogo size={168} glow={true} className="relative transition-transform duration-500 group-hover:scale-105" />
+            </div>
+            <div className="text-center">
+              <div className="font-display font-extrabold text-lg text-white tracking-wide">
+                Carbon<span className="text-emerald-400">Shift</span>
+              </div>
+              <div className="text-xs text-slate-400 font-mono mt-0.5">
+                Ultra HD • Scope 2 Verified
+              </div>
+              <div className="mt-3.5 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-[11px] font-mono text-emerald-300">
+                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping"></span>
+                <span>Spatial-Temporal Active</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
