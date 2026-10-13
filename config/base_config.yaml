@@ -1,0 +1,31 @@
+# CarbonShift Base System Configuration
+system:
+  seed: 42
+  log_level: "INFO"
+  slot_duration_minutes: 60
+  horizon_slots: 24
+  freeze_slots: 1
+
+optimizer:
+  solver: "CP_SAT"
+  max_solve_time_seconds: 10.0
+  integer_scale_carbon: 1000       # S = 1000 (milligram scale)
+  integer_scale_cost: 10000        # S_cost = 10000 (0.01 cent scale)
+  default_weights:
+    alpha_carbon: 1.0
+    beta_cost: 0.1
+    gamma_risk: 0.5
+  default_safety_margin_slots: 1
+
+energy_model:
+  power:
+    p_idle_kw: 0.100               # 100 W
+    p_max_kw: 0.500                # 500 W
+    curvature_r: 1.4               # SPECpower calibrated exponent
+  network:
+    transfer_kwh_per_gb: 0.014     # Aslan et al. (2018)
+    default_transfer_intensity: 400.0  # gCO2e / kWh
+
+forecasting:
+  risk_level: "p75"                # Options: p50, p75, p90
+  confidence_interval_width: 0.80  # P10 to P90
