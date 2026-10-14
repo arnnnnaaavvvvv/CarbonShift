@@ -4,9 +4,12 @@
   "description": "Autonomous Carbon-Aware Workload Scheduler & Trace Replay Platform",
   "scripts": {
     "start": "python run_fullstack.py",
+    "dev": "python run_fullstack.py --dev",
     "dev:backend": "python -m uvicorn carbonshift.api.app:app --host 127.0.0.1 --port 8000 --reload",
     "dev:frontend": "cd web && npm run dev",
+    "build": "cd web && npm run build",
     "build:frontend": "cd web && npm run build",
+    "test": "python -m pytest -q",
     "test:backend": "python -m pytest -q",
     "audit": "python scripts/audit_all.py"
   },
