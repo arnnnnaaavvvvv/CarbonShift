@@ -1,5 +1,5 @@
 {
-  "name": "deppulse",
+  "name": "@arnavvv/deppulse",
   "version": "0.1.0",
   "description": "Dependency health and upgrade intelligence CLI and engine for Node.js",
   "keywords": [
