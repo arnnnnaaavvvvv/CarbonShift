@@ -27,15 +27,34 @@ export async function handleScanCommand(
     throw new UsageError(`Invalid format '${options.format}'. Allowed: terminal, json, markdown`);
   }
 
+  if (options.config && options.config.includes('\0')) {
+    throw new UsageError('Invalid config path: contains null byte');
+  }
+  if (options.output && options.output.includes('\0')) {
+    throw new UsageError('Invalid output path: contains null byte');
+  }
+
   // Load custom config if specified, or check default deppulse.config.json
   let config: DepPulseConfig = getDefaultConfig();
-  const configPath = options.config ?? path.resolve(targetPath, 'deppulse.config.json');
-
-  try {
-    const rawConfig = await fs.readFile(configPath, 'utf-8');
-    config = parseConfig(JSON.parse(rawConfig));
-  } catch {
-    // If not found or default missing, use defaults
+  if (options.config) {
+    const configPath = path.resolve(process.cwd(), options.config);
+    try {
+      const rawConfig = await fs.readFile(configPath, 'utf-8');
+      config = parseConfig(JSON.parse(rawConfig));
+    } catch (err) {
+      throw new UsageError(
+        `Failed to load specified config file at '${options.config}': ${(err as Error).message}`,
+        'Verify the path and ensure valid JSON syntax matching the schema in docs/configuration.md',
+      );
+    }
+  } else {
+    const defaultConfigPath = path.resolve(targetPath, 'deppulse.config.json');
+    try {
+      const rawConfig = await fs.readFile(defaultConfigPath, 'utf-8');
+      config = parseConfig(JSON.parse(rawConfig));
+    } catch {
+      // If default config doesn't exist, use defaults
+    }
   }
 
   // Override failOn if flag passed
@@ -76,7 +95,9 @@ export async function handleScanCommand(
   }
 
   if (options.output) {
-    await fs.writeFile(options.output, formatted, 'utf-8');
+    const resolvedOutput = path.resolve(process.cwd(), options.output);
+    await fs.mkdir(path.dirname(resolvedOutput), { recursive: true });
+    await fs.writeFile(resolvedOutput, formatted, 'utf-8');
   } else {
     // eslint-disable-next-line no-console
     console.log(formatted);

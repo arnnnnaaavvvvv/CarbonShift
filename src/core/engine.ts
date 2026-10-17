@@ -135,7 +135,7 @@ export class DepPulseEngine {
       const scoreB = b.score ?? -1;
       if (scoreA !== scoreB) return scoreA - scoreB;
 
-      return a.dependency.name.localeCompare(b.dependency.name);
+      return a.dependency.id.localeCompare(b.dependency.id);
     });
 
     // Compute summary

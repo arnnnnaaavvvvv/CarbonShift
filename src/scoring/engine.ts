@@ -77,7 +77,7 @@ export function scoreDependencyHealth(
       isFatalCap: true,
       fatalCapValue: 30,
     });
-  } else if (repoMeta.associationStatus === 'verified' && repoMeta.stars > 100) {
+  } else if (!repoMeta.isArchived && repoMeta.associationStatus === 'verified' && repoMeta.stars > 100) {
     evidence.push({
       signal: 'repo_provenance',
       observedValue: { associationStatus: 'verified', stars: repoMeta.stars },
@@ -141,7 +141,7 @@ export function scoreDependencyHealth(
   finalScore = Math.min(100, Math.max(0, Math.round(finalScore)));
 
   let maintenanceRisk: MaintenanceRisk = 'low';
-  if (finalScore < 25) {
+  if (finalScore <= 25) {
     maintenanceRisk = 'critical';
   } else if (finalScore < 50) {
     maintenanceRisk = 'high';

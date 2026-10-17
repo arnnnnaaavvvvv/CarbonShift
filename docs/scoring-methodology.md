@@ -94,8 +94,8 @@ $$\text{Confidence} = C_{\text{registry}} + C_{\text{repo}} + C_{\text{runtime}}
 | :--- | :--- | :--- |
 | **80 – 100** | `low` | Healthy, active or verified mature-stable. Safe for production. |
 | **50 – 79** | `medium` | Sluggish maintenance, stale runtime declarations, or slowing release velocity. Monitor. |
-| **25 – 49** | `high` | Multi-year release freeze with unaddressed bugs, unverified provenance, or obsolete Node engine compatibility. Plan migration. |
-| **0 – 24** | `critical` | Deprecated, archived repository, or abandoned. Replace immediately. |
+| **26 – 49** | `high` | Multi-year release freeze with unaddressed bugs, unverified provenance, or obsolete Node engine compatibility. Plan migration. |
+| **0 – 25** | `critical` | Deprecated, archived repository, or abandoned. Replace immediately. |
 | `null` | `unknown` | Insufficient telemetry (e.g. private unresolvable repo, sparse registry metadata). |
 
 ---

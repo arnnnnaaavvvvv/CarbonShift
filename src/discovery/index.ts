@@ -63,6 +63,26 @@ export async function discoverDependencies(
       continue;
     }
 
+    if (declared.source === 'alias') {
+      skipped.push({
+        name: declared.name,
+        declaredRange: declared.range,
+        reason: 'unsupported_source',
+        explanation: `npm alias dependency (${declared.range}); direct registry telemetry lookup is skipped.`,
+      });
+      continue;
+    }
+
+    if (declared.source === 'unknown') {
+      skipped.push({
+        name: declared.name,
+        declaredRange: declared.range,
+        reason: 'unsupported_source',
+        explanation: `Unrecognized dependency source format (${declared.range}); public registry telemetry is unavailable.`,
+      });
+      continue;
+    }
+
     directNames.add(declared.name);
 
     // Resolve version from lockfile if available, otherwise check if declared range is a clean version

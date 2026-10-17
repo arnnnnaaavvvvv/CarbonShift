@@ -97,6 +97,10 @@ export function evaluatePolicy(
     });
   }
 
+  // Deterministically sort violations and exceptions
+  violations.sort((a, b) => a.dependencyId.localeCompare(b.dependencyId) || a.rule.localeCompare(b.rule));
+  allowedExceptions.sort();
+
   return {
     isPassed: violations.length === 0,
     violations,
