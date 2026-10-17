@@ -11,23 +11,37 @@ export function analyzeReleaseCadence(
   isMatureStable: boolean,
 ): CadenceAnalysis {
   const now = Date.now();
-  const lastPublished = new Date(meta.publishedAt).getTime();
-  const daysSinceLastRelease = Math.max(0, Math.floor((now - lastPublished) / (24 * 60 * 60 * 1000)));
+  const lastPublished = meta.publishedAt ? new Date(meta.publishedAt).getTime() : NaN;
+  const isDateValid = !Number.isNaN(lastPublished);
+  const daysSinceLastRelease = isDateValid
+    ? Math.max(0, Math.floor((now - lastPublished) / (24 * 60 * 60 * 1000)))
+    : 0;
 
   // Count releases in last 24 months (730 days)
   const twoYearsAgoMs = now - 730 * 24 * 60 * 60 * 1000;
   let releasesPast24Months = 0;
 
-  for (const dateStr of Object.values(meta.versionsTime)) {
-    const d = new Date(dateStr).getTime();
-    if (d >= twoYearsAgoMs) {
-      releasesPast24Months++;
+  if (meta.versionsTime) {
+    for (const dateStr of Object.values(meta.versionsTime)) {
+      const d = new Date(dateStr).getTime();
+      if (!Number.isNaN(d) && d >= twoYearsAgoMs) {
+        releasesPast24Months++;
+      }
     }
   }
 
   const evidence: HealthEvidence[] = [];
 
-  if (isMatureStable) {
+  if (!isDateValid) {
+    evidence.push({
+      signal: 'release_recency',
+      observedValue: { daysSinceLastRelease: null },
+      source: 'npm',
+      observedAt: new Date().toISOString(),
+      explanation: 'Release publication timestamp is not available in registry metadata.',
+      contribution: 0,
+    });
+  } else if (isMatureStable) {
     if (daysSinceLastRelease > 1095) {
       // 3+ years
       evidence.push({
