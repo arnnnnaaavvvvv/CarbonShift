@@ -38,6 +38,8 @@
     "node": ">=18.0.0"
   },
   "scripts": {
+    "dev": "vite web --port 5173",
+    "build:web": "vite build web",
     "build": "tsup",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",

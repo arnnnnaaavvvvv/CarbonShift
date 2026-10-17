@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DepPulse — Dependency Health & Upgrade Intelligence</title>
+    <meta
+      name="description"
+      content="DepPulse is a production-ready Node.js CLI and decoupled engine that audits third-party dependency maintenance health, detects archived repos and deprecations, and provides actionable upgrade intelligence."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./src/style.css" />
+  </head>
+  <body>
+    <!-- Background Ambient Lighting -->
+    <div class="ambient-glow glow-top"></div>
+    <div class="ambient-glow glow-bottom"></div>
+
+    <!-- Navigation Bar -->
+    <header class="navbar-wrapper">
+      <nav class="navbar container">
+        <a href="#" class="brand-logo" id="nav-brand">
+          <div class="logo-mark">
+            <span class="logo-pulse"></span>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+            </svg>
+          </div>
+          <div class="logo-text">
+            <span class="brand-title">Dep<span class="accent-maroon">Pulse</span></span>
+            <span class="version-tag">v0.1.0</span>
+          </div>
+        </a>
+
+        <div class="nav-links">
+          <a href="#quickstart" class="nav-link">Install</a>
+          <a href="#terminal" class="nav-link">Interactive CLI</a>
+          <a href="#commands" class="nav-link">Commands</a>
+          <a href="#calculator" class="nav-link">Score Playground</a>
+          <a href="#config-builder" class="nav-link">Config Builder</a>
+          <a href="#architecture" class="nav-link">Core Principles</a>
+        </div>
+
+        <div class="nav-actions">
+          <a
+            href="https://github.com/arnnnnaaavvvvv/DepPlus"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="btn-github"
+            id="github-repo-link"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+            </svg>
+            <span>GitHub</span>
+          </a>
+        </div>
+      </nav>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="page-content">
+      <!-- Hero Section -->
+      <section class="hero-section container">
+        <div class="hero-badge">
+          <span class="badge-dot"></span>
+          <span>Zero Secrets • 100% Read-Only • Deterministic Telemetry</span>
+        </div>
+
+        <h1 class="hero-title">
+          Know What Maintenance Risks Your
+          <span class="gradient-text">Dependencies Carry.</span>
+        </h1>
+
+        <p class="hero-subtitle">
+          Traditional tools only tell you if a CVE exists or if a newer version number was pushed.
+          <strong>DepPulse</strong> audits upstream repository archival, silent package abandonment, obsolete runtime engines, and true maintenance cadence with an evidence-first, explainable 0–100 health score.
+        </p>
+
+        <!-- Quick Run Box -->
+        <div class="quick-terminal-box">
+          <div class="quick-terminal-label">Zero install instant run:</div>
+          <div class="quick-terminal-code">
+            <span class="terminal-prompt">$</span>
+            <code id="quick-run-cmd">npx deppulse scan .</code>
+            <button class="btn-copy" id="btn-copy-quick" title="Copy to clipboard">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+              </svg>
+              <span class="copy-text">Copy</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="hero-metrics-grid">
+          <div class="metric-card">
+            <div class="metric-icon">🛡️</div>
+            <div class="metric-value">SSRF & DoS Safe</div>
+            <div class="metric-desc">Manual redirects re-validated & 10MB streaming payload caps</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-icon">⚖️</div>
+            <div class="metric-value">Mature-Stable Waiver</div>
+            <div class="metric-desc">Done packages like wrappy are never penalized for quiet stability</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-icon">🔒</div>
+            <div class="metric-value">Zero Local Mutation</div>
+            <div class="metric-desc">Guaranteed read-only; no script execution and zero file writes</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-icon">⚡</div>
+            <div class="metric-value">100% Deterministic</div>
+            <div class="metric-desc">Identical inputs generate bit-for-bit identical evidence & reports</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section: Installation & Setup -->
+      <section class="section container" id="quickstart">
+        <div class="section-header">
+          <span class="section-tag">Quickstart</span>
+          <h2 class="section-title">Installation & Execution</h2>
+          <p class="section-desc">Run DepPulse directly in CI/CD or install it globally as your go-to maintenance auditor.</p>
+        </div>
+
+        <div class="install-panel glass-panel">
+          <div class="install-tabs" role="tablist">
+            <button class="install-tab active" data-pkg="npx" id="tab-npx">npx (Zero Install)</button>
+            <button class="install-tab" data-pkg="npm" id="tab-npm">npm</button>
+            <button class="install-tab" data-pkg="pnpm" id="tab-pnpm">pnpm</button>
+            <button class="install-tab" data-pkg="yarn" id="tab-yarn">yarn</button>
+            <button class="install-tab" data-pkg="global" id="tab-global">Global CLI</button>
+          </div>
+
+          <div class="install-code-container">
+            <pre><code class="language-bash" id="install-command-text">npx deppulse scan .</code></pre>
+            <button class="btn-copy" id="btn-copy-install" title="Copy command">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+              </svg>
+              <span class="copy-text">Copy</span>
+            </button>
+          </div>
+
+          <div class="install-note">
+            <span class="note-pill">Prerequisite</span>
+            <span>Requires <strong>Node.js &gt;= 18.0.0</strong> LTS. No tokens or account required. Optional <code>GITHUB_TOKEN</code> environment variable avoids public API rate limits.</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section: Interactive Terminal Simulator -->
+      <section class="section container" id="terminal">
+        <div class="section-header">
+          <span class="section-tag">Live Simulator</span>
+          <h2 class="section-title">Interactive CLI Console</h2>
+          <p class="section-desc">Experience DepPulse's real CLI outputs, colored tables, and policy engine in action.</p>
+        </div>
+
+        <div class="terminal-window glass-panel">
+          <div class="terminal-header">
+            <div class="window-controls">
+              <span class="control-dot close"></span>
+              <span class="control-dot minimize"></span>
+              <span class="control-dot expand"></span>
+            </div>
+            <div class="terminal-title">bash — deppulse CLI v0.1.0</div>
+            <div class="terminal-status"><span class="status-online"></span> Ready</div>
+          </div>
+
+          <!-- Command selector toolbar -->
+          <div class="terminal-command-bar">
+            <span class="command-bar-label">Choose Command:</span>
+            <div class="command-buttons">
+              <button class="cmd-btn active" data-cmd="scan-terminal">deppulse scan .</button>
+              <button class="cmd-btn" data-cmd="scan-markdown">scan --format markdown</button>
+              <button class="cmd-btn" data-cmd="scan-json">scan --format json</button>
+              <button class="cmd-btn" data-cmd="explain-wrappy">explain wrappy</button>
+              <button class="cmd-btn" data-cmd="compare-pkgs">compare axios got</button>
+              <button class="cmd-btn" data-cmd="analyze-dep">analyze request</button>
+            </div>
+          </div>
+
+          <!-- Terminal Screen -->
+          <div class="terminal-screen" id="terminal-output-area">
+            <!-- Simulated terminal content populated by JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Section: CLI Command Reference -->
+      <section class="section container" id="commands">
+        <div class="section-header">
+          <span class="section-tag">Reference Guide</span>
+          <h2 class="section-title">Complete CLI Commands & Options</h2>
+          <p class="section-desc">Every command is built for developers and hardened for automated CI/CD pipeline integration.</p>
+        </div>
+
+        <div class="commands-grid">
+          <!-- Command: scan -->
+          <div class="command-card glass-panel">
+            <div class="cmd-card-header">
+              <span class="cmd-badge">Primary Command</span>
+              <h3 class="cmd-name"><code>deppulse scan [path]</code></h3>
+              <p class="cmd-summary">Scan project dependencies from package.json and lockfile, score health, and enforce CI threshold policies.</p>
+            </div>
+            <div class="cmd-flags-table">
+              <div class="flag-row">
+                <span class="flag-syntax"><code>-f, --format &lt;fmt&gt;</code></span>
+                <span class="flag-desc">Output format: <code>terminal</code> (default), <code>json</code>, or <code>markdown</code>.</span>
+              </div>
+              <div class="flag-row">
+                <span class="flag-syntax"><code>--fail-on &lt;risks&gt;</code></span>
+                <span class="flag-desc">Comma-separated risk levels to fail CI (e.g. <code>critical,high</code>).</span>
+              </div>
+              <div class="flag-row">
+                <span class="flag-syntax"><code>--max-high-risk &lt;N&gt;</code></span>
+                <span class="flag-desc">Maximum allowable high-risk packages before triggering exit code 1.</span>
+              </div>
+              <div class="flag-row">
+                <span class="flag-syntax"><code>--allow &lt;pkgs&gt;</code></span>
+                <span class="flag-desc">Temporary exemption list (e.g. <code>legacy-lib@^1.0.0</code>).</span>
+              </div>
+              <div class="flag-row">
+                <span class="flag-syntax"><code>--no-cache</code></span>
+                <span class="flag-desc">Bypass local <code>.deppulse/cache/</code> disk cache and query registries live.</span>
+              </div>
+              <div class="flag-row">
+                <span class="flag-syntax"><code>-o, --output &lt;file&gt;</code></span>
+                <span class="flag-desc">Save output to file (creates parent directories safely).</span>
+              </div>
+            </div>
+            <div class="cmd-example">
+              <span class="example-label">Example:</span>
+              <code>deppulse scan . --format markdown --fail-on critical --output scan-report.md</code>
+            </div>
+          </div>
+
+          <!-- Command: analyze -->
+          <div class="command-card glass-panel">
+            <div class="cmd-card-header">
+              <span class="cmd-badge">Inspection</span>
+              <h3 class="cmd-name"><code>deppulse analyze &lt;package&gt;</code></h3>
+              <p class="cmd-summary">Perform a comprehensive telemetry inspection on any registry package without needing a local lockfile.</p>
+            </div>
+            <div class="cmd-flags-table">
+              <div class="flag-row">
+                <span class="flag-syntax"><code>--version &lt;semver&gt;</code></span>
+                <span class="flag-desc">Target specific published version (defaults to latest dist-tag).</span>
+              </div>
+              <div class="flag-row">
+                <span class="flag-syntax"><code>--no-cache</code></span>
+                <span class="flag-desc">Force live telemetry fetch from registry and GitHub.</span>
+              </div>
+            </div>
+            <div class="cmd-example">
+              <span class="example-label">Example:</span>
+              <code>deppulse analyze lodash@4.17.21</code>
+            </div>
+          </div>
+
+          <!-- Command: compare -->
+          <div class="command-card glass-panel">
+            <div class="cmd-card-header">
+              <span class="cmd-badge">Evaluation</span>
+              <h3 class="cmd-name"><code>deppulse compare &lt;pkgA&gt; &lt;pkgB&gt;</code></h3>
+              <p class="cmd-summary">Direct side-by-side maintenance comparison between two packages to guide technology selection.</p>
+            </div>
+            <div class="cmd-flags-table">
+              <div class="flag-row">
+                <span class="flag-syntax"><code>pkgA, pkgB</code></span>
+                <span class="flag-desc">Package names with optional versions (e.g. <code>express</code> vs <code>fastify</code>).</span>
+              </div>
+            </div>
+            <div class="cmd-example">
+              <span class="example-label">Example:</span>
+              <code>deppulse compare express fastify</code>
+            </div>
+          </div>
+
+          <!-- Command: explain -->
+          <div class="command-card glass-panel">
+            <div class="cmd-card-header">
+              <span class="cmd-badge">Auditing</span>
+              <h3 class="cmd-name"><code>deppulse explain &lt;package&gt;</code></h3>
+              <p class="cmd-summary">Inspect the exact mathematical scoring formula, observed telemetry facts, and fatal caps applied.</p>
+            </div>
+            <div class="cmd-flags-table">
+              <div class="flag-row">
+                <span class="flag-syntax"><code>package</code></span>
+                <span class="flag-desc">Package name to explain (e.g. <code>wrappy</code>).</span>
+              </div>
+            </div>
+            <div class="cmd-example">
+              <span class="example-label">Example:</span>
+              <code>deppulse explain wrappy</code>
+            </div>
+          </div>
+        </div>
+
+        <!-- Exit Codes Table -->
+        <div class="exit-codes-box glass-panel">
+          <h4 class="box-subtitle">Standardized Exit Codes for CI/CD</h4>
+          <div class="exit-table">
+            <div class="exit-col">
+              <div class="exit-code code-0">Exit 0</div>
+              <div class="exit-meaning"><strong>Success / Pass</strong></div>
+              <div class="exit-info">All scanned dependencies pass the configured health policy.</div>
+            </div>
+            <div class="exit-col">
+              <div class="exit-code code-1">Exit 1</div>
+              <div class="exit-meaning"><strong>Policy Breach</strong></div>
+              <div class="exit-info">One or more dependencies violate <code>failOnRisk</code> or exceed limits.</div>
+            </div>
+            <div class="exit-col">
+              <div class="exit-code code-2">Exit 2</div>
+              <div class="exit-meaning"><strong>Usage / System Error</strong></div>
+              <div class="exit-info">Missing manifest, invalid arguments, or parse error.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section: Interactive Live Score Calculator -->
+      <section class="section container" id="calculator">
+        <div class="section-header">
+          <span class="section-tag">Interactive Engine</span>
+          <h2 class="section-title">Maintenance Health Score Simulator</h2>
+          <p class="section-desc">Toggle observed signals to observe how DepPulse's deterministic rules, fatal caps, and mature-stable waivers work.</p>
+        </div>
+
+        <div class="calculator-grid">
+          <!-- Controls Panel -->
+          <div class="calc-controls glass-panel">
+            <h3 class="calc-panel-title">Observed Package Signals</h3>
+
+            <div class="control-group">
+              <label class="control-label" for="param-age">Package Age: <span id="val-age" class="accent-maroon">5 years</span></label>
+              <input type="range" id="param-age" min="0" max="10" step="1" value="5" class="slider" />
+              <div class="range-sub">Older than 4 years qualifies for Mature-Stable evaluation.</div>
+            </div>
+
+            <div class="control-group">
+              <label class="control-label" for="param-releases">Total Lifetime Releases: <span id="val-releases" class="accent-maroon">15 releases</span></label>
+              <input type="range" id="param-releases" min="1" max="50" step="1" value="15" class="slider" />
+            </div>
+
+            <div class="control-group">
+              <label class="control-label" for="param-recency">Days Since Last Published Version: <span id="val-recency" class="accent-maroon">600 days</span></label>
+              <input type="range" id="param-recency" min="0" max="2500" step="30" value="600" class="slider" />
+            </div>
+
+            <div class="toggle-group">
+              <label class="toggle-switch">
+                <input type="checkbox" id="toggle-deprecated" />
+                <span class="toggle-slider"></span>
+                <span class="toggle-text">Package is Marked <strong>Deprecated</strong> (Fatal Cap: 20)</span>
+              </label>
+
+              <label class="toggle-switch">
+                <input type="checkbox" id="toggle-archived" />
+                <span class="toggle-slider"></span>
+                <span class="toggle-text">Upstream GitHub Repo is <strong>Archived</strong> (Fatal Cap: 25)</span>
+              </label>
+
+              <label class="toggle-switch">
+                <input type="checkbox" id="toggle-engines" checked />
+                <span class="toggle-slider"></span>
+                <span class="toggle-text">Compatible with Active <strong>Node.js LTS</strong></span>
+              </label>
+
+              <label class="toggle-switch">
+                <input type="checkbox" id="toggle-repo-verified" checked />
+                <span class="toggle-slider"></span>
+                <span class="toggle-text">Upstream Repo <strong>Verified & Authentic</strong></span>
+              </label>
+
+              <label class="toggle-switch">
+                <input type="checkbox" id="toggle-cve" />
+                <span class="toggle-slider"></span>
+                <span class="toggle-text">Has 2 Known CVEs (<strong>0 Score Impact</strong> — Context Only)</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Score Result Display -->
+          <div class="calc-results glass-panel">
+            <div class="score-display-card">
+              <div class="score-circle" id="calc-score-circle">
+                <span class="score-number" id="calc-score-val">100</span>
+                <span class="score-max">/ 100</span>
+              </div>
+              <div class="score-meta">
+                <span class="risk-badge badge-low" id="calc-risk-badge">Low Maintenance Risk</span>
+                <div class="mature-badge" id="calc-mature-pill">✨ Verified Mature-Stable Package</div>
+              </div>
+            </div>
+
+            <div class="calc-breakdown">
+              <h4 class="breakdown-title">Auditable Evidence Calculation</h4>
+              <ul class="evidence-list" id="calc-evidence-list">
+                <!-- Injected dynamically by JS -->
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section: Interactive Config Builder -->
+      <section class="section container" id="config-builder">
+        <div class="section-header">
+          <span class="section-tag">Custom Configuration</span>
+          <h2 class="section-title"><code>deppulse.config.json</code> Generator</h2>
+          <p class="section-desc">Design your team's maintenance health policy and download your configuration file ready for CI/CD.</p>
+        </div>
+
+        <div class="config-builder-grid">
+          <div class="config-form glass-panel">
+            <div class="form-group">
+              <label class="form-label" for="cfg-fail-risk">Fail CI On Risk Level:</label>
+              <select id="cfg-fail-risk" class="select-field">
+                <option value="critical">Critical Only (Deprecated, Archived)</option>
+                <option value="critical,high" selected>Critical + High (Recommended for Production)</option>
+                <option value="critical,high,medium">Critical + High + Medium (Strict)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="cfg-max-high">Max Allowed High-Risk Dependencies:</label>
+              <input type="number" id="cfg-max-high" min="0" max="20" value="0" class="input-field" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="cfg-cache-ttl">Cache TTL (Hours):</label>
+              <input type="number" id="cfg-cache-ttl" min="1" max="168" value="24" class="input-field" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Exemption Allowlist (Temporary waivers):</label>
+              <div class="allowlist-inputs">
+                <input type="text" id="cfg-allow-name" placeholder="Package name (e.g. legacy-jwt)" class="input-field" />
+                <input type="text" id="cfg-allow-reason" placeholder="Reason (e.g. Upgrading in Q4)" class="input-field" />
+                <button class="btn-action" id="btn-add-allow">Add Exemption</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="config-preview glass-panel">
+            <div class="config-preview-header">
+              <span>deppulse.config.json</span>
+              <button class="btn-copy" id="btn-copy-config">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                  <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                </svg>
+                <span>Copy</span>
+              </button>
+            </div>
+            <pre><code class="language-json" id="config-json-output"></code></pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section: Core Architecture & Guarantees -->
+      <section class="section container" id="architecture">
+        <div class="section-header">
+          <span class="section-tag">Guarantees</span>
+          <h2 class="section-title">The Four Non-Negotiable Hard Rules</h2>
+          <p class="section-desc">DepPulse is engineered around developer trust, safety, and operational transparency.</p>
+        </div>
+
+        <div class="principles-grid">
+          <div class="principle-card glass-panel">
+            <div class="principle-number">01</div>
+            <h3 class="principle-title">Strict Read-Only Execution</h3>
+            <p class="principle-desc">DepPulse never executes project install scripts, never invokes lifecycle hooks, and never alters your lockfiles or source code. Verified by automated filesystem-diff tests.</p>
+          </div>
+
+          <div class="principle-card glass-panel">
+            <div class="principle-number">02</div>
+            <h3 class="principle-title">Zero Token Leakage</h3>
+            <p class="principle-desc">No API keys or tokens are ever logged, cached to disk, or included in JSON/terminal reports. All URLs and HTTP errors are automatically scrubbed through regex redaction.</p>
+          </div>
+
+          <div class="principle-card glass-panel">
+            <div class="principle-number">03</div>
+            <h3 class="principle-title">Missing Data is Never Penalized</h3>
+            <p class="principle-desc">Sparse telemetry from unlinked GitHub repositories or private registries only lowers the confidence metric—it never deducts health points or manufactures false alarms.</p>
+          </div>
+
+          <div class="principle-card glass-panel">
+            <div class="principle-number">04</div>
+            <h3 class="principle-title">Decoupled Security Context</h3>
+            <p class="principle-desc">Security advisories (CVEs) are presented purely as orthogonal context annotations. A zero-day CVE on a well-maintained library never misclassifies it as abandoned.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer-wrapper">
+      <div class="footer container">
+        <div class="footer-left">
+          <div class="brand-title">Dep<span class="accent-maroon">Pulse</span></div>
+          <p class="footer-sub">Engineered with TypeScript, Node.js &gt;=18, and uncompromising safety.</p>
+        </div>
+        <div class="footer-right">
+          <div class="footer-links">
+            <a href="https://github.com/arnnnnaaavvvvv/DepPlus" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <a href="https://github.com/arnnnnaaavvvvv/DepPlus/blob/main/docs/architecture.md" target="_blank" rel="noopener noreferrer">Architecture</a>
+            <a href="https://github.com/arnnnnaaavvvvv/DepPlus/blob/main/docs/scoring-methodology.md" target="_blank" rel="noopener noreferrer">Scoring Methodology</a>
+            <a href="https://github.com/arnnnnaaavvvvv/DepPlus/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">Changelog</a>
+          </div>
+          <div class="footer-copy">© 2026 DepPulse. MIT Licensed. Open source.</div>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Toast Notification for Copy -->
+    <div class="toast" id="toast">Copied to clipboard!</div>
+
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
