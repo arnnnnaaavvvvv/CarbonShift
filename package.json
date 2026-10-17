@@ -15,7 +15,7 @@
   "license": "MIT",
   "type": "module",
   "bin": {
-    "deppulse": "./bin/deppulse.js"
+    "deppulse": "bin/deppulse.js"
   },
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
